@@ -178,8 +178,7 @@ class AuthApiTest {
 
     @Test
     void publicJobEndpointsDoNotRequireToken() throws Exception {
-        // Aucun contrôleur d'offres à cette étape : 404 prouve que la sécurité laisse passer (sinon 401).
-        mvc.perform(get("/api/jobs")).andExpect(status().isNotFound());
+        mvc.perform(get("/api/jobs")).andExpect(status().isOk());
     }
 
     // ---------- Administration des utilisateurs ----------

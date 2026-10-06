@@ -24,7 +24,9 @@ Contenu du jeton : `sub` (id utilisateur), `email`, `role`, `iss` = `smartrecrui
 
 Convention pour les modules suivants : placer les endpoints sous le préfixe du rôle concerné
 (ex. `/api/recruiter/jobs`, `/api/candidate/applications`) ; la règle de rôle s'applique alors automatiquement.
-Pour une règle plus fine (ex. un recruteur ne modifie que ses propres offres), vérifier l'appartenance dans le service.
+Pour une règle plus fine (ex. un recruteur ne modifie que ses propres offres), vérifier l'appartenance dans le service :
+une ressource d'un autre utilisateur renvoie **404** (et non 403) pour ne pas révéler son existence.
+Endpoints métier : [api.md](api.md).
 
 ## Endpoints d'authentification
 
@@ -52,11 +54,11 @@ Toutes les erreurs ont le même format JSON :
 
 | Code | Cas |
 |---|---|
-| 400 | données invalides (détail par champ dans `fieldErrors`), inscription en `ADMIN` |
+| 400 | données invalides (détail par champ dans `fieldErrors`), inscription en `ADMIN`, règle métier non respectée |
 | 401 | jeton absent, invalide ou expiré ; email ou mot de passe incorrect (même message dans les deux cas) |
 | 403 | rôle insuffisant ; compte désactivé |
-| 404 | ressource introuvable |
-| 409 | email déjà utilisé |
+| 404 | ressource introuvable ou appartenant à un autre utilisateur |
+| 409 | email déjà utilisé, nom d'entreprise déjà pris, candidature déjà envoyée |
 
 ## Mesures de protection
 
