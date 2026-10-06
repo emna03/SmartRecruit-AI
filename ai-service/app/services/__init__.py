@@ -8,5 +8,5 @@ MODULES: dict[str, bool] = {
     "cv_parser": True,  # étape 8
     "matching": True,  # étape 9
     "chatbot": True,  # étape 10
-    "ml": False,  # étape 11
+    "ml": True,  # étape 11 : annoncé disponible seulement si le modèle entraîné est chargé (voir /api/status)
 }

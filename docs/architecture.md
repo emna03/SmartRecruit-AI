@@ -20,7 +20,7 @@
 │  ├─ cv_parser   (PDF → texte → NLP → JSON)
 │  ├─ matching    (CV ↔ offre → score 0-100 explicable)
 │  ├─ chatbot     (intentions + offres publiées, NLP local)
-│  └─ ml          (modèle prédictif, si dataset disponible)
+│  └─ ml          (risque de turnover : modèle scikit-learn entraîné hors ligne)
 └──────────────────────────┘
 ```
 
@@ -78,6 +78,20 @@ Candidat → Angular (Assistant RH) → Spring Boot POST /api/candidate/chatbot/
 Aucun LLM n'est intégré (choix argumenté dans [ai/chatbot.md](ai/chatbot.md#pourquoi-pas-de-llm-externe)) ;
 aucune donnée sur le candidat (identité, CV, candidatures) n'est envoyée au service IA.
 
+### 2.4 Risque de turnover (Machine Learning)
+
+```
+Hors ligne : python -m ml.download_dataset (IBM HR Analytics, fictif, SHA-256 vérifié)
+             python -m ml.train → comparaison LR / forêt aléatoire → turnover_model.joblib + rapport d'évaluation
+
+Admin / recruteur → Angular (Risque de turnover, 24 variables) → Spring Boot POST /api/hr/turnover/predictions
+  → validation stricte, seules les 24 variables sont transmises (aucune identité, ni âge, genre, situation familiale)
+  → FastAPI /api/ml/turnover/predict : modèle chargé au démarrage → score, niveau, 5 facteurs (occlusion)
+  → Spring Boot valide la réponse → Angular (avec l'avertissement « estimation… ne doit pas être utilisée seule »)
+```
+
+Rien n'est enregistré dans MySQL (aucune migration). Dataset, métriques et limites : [ai/turnover-ml.md](ai/turnover-ml.md).
+
 ## 3. Structure des modules
 
 ### 3.1 Backend Spring Boot (`backend/`)
@@ -101,6 +115,7 @@ backend/src/main/java/com/smartrecruit/
 ├── cv/              # CV : upload, stockage, appel au parser IA             (P3)
 ├── matching/        # MatchingResult, appel au matching IA, classement      (P4)
 ├── chatbot/         # proxy vers le chatbot IA                              (P5)
+├── turnover/        # prédiction du risque de turnover (ML), sans persistance (P5)
 ├── ai/              # AiServiceClient commun (timeouts, erreurs)            (P3/P4/P5)
 └── dashboard/       # statistiques candidat / recruteur / admin             (P6)
 ```
@@ -120,6 +135,7 @@ frontend/src/app/
 │   ├── candidate/   # dashboard, profile, cv, jobs, applications, chatbot (Assistant RH)
 │   ├── recruiter/   # dashboard, company, jobs, jobs/create, jobs/:id/candidates
 │   ├── admin/       # dashboard, users, companies, jobs
+│   ├── hr/          # risque de turnover (ML), partagé par les espaces admin et recruteur
 │   └── chatbot/     # widget de chat
 └── app.routes.ts
 ```
@@ -140,9 +156,9 @@ ai-service/
 │   │   ├── cv_parser/ # extraction PDF, nettoyage, extraction NLP       (P3, étape 8)
 │   │   ├── matching/  # calcul du score explicable                      (P4, étape 9)
 │   │   ├── chatbot/   # entités, intentions, recherche d'offres, réponses (P5, étape 10)
-│   │   └── ml/        # chargement du modèle et prédiction              (P5, étape 11)
+│   │   └── ml/        # dataset, entraînement, explication, chargement du modèle (P5, étape 11)
 │   └── resources/     # référentiel de compétences, synonymes, FAQ      (à partir de l'étape 8)
-├── ml/                # entraînement hors ligne : data/ (ignoré), artifacts/ (ignoré), train.py
+├── ml/                # download_dataset.py, train.py, reports/ (versionné) ; data/ et artifacts/ ignorés
 └── tests/             # pytest
 ```
 

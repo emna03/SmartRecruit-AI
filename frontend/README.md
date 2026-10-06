@@ -31,7 +31,10 @@ Le test e2e nécessite MySQL et le backend démarrés (le serveur Angular est la
 les données enregistrées directement dans MySQL (conteneur `smartrecruit-mysql`) ; `matching-flow.e2e.ts` fait de même
 pour le score de compatibilité (CV → offre → score → MySQL → affichage candidat → classement recruteur), et
 `chatbot-flow.e2e.ts` pour l'Assistant RH (connexion candidat → question → réponse basée sur les offres publiées de MySQL).
-Il crée des comptes `e2e6-*` à `e2e10-*@test.local` et des entreprises `E2E6 *` à `E2E10 *`, puis les supprime via l'API admin
+`turnover-flow.e2e.ts` vérifie la prédiction de risque de turnover (recruteur / admin → saisie → Spring Boot → FastAPI →
+modèle ML réel → résultat comparé au rapport `ai-service/ml/reports/turnover_evaluation.json` ; candidat sans accès) :
+il nécessite le modèle entraîné (`python -m ml.train`) et le service IA démarré.
+Il crée des comptes `e2e6-*` à `e2e11-*@test.local` et des entreprises `E2E6 *` à `E2E10 *`, puis les supprime via l'API admin
 (identifiants lus dans `../.env`). `E2E_KEEP_DATA=1` conserve les données pour les inspecter dans MySQL.
 Captures d'écran : `e2e/screenshots/` (non versionné).
 
@@ -49,6 +52,7 @@ Captures d'écran : `e2e/screenshots/` (non versionné).
 | `features/candidate` | Tableau de bord, profil (infos, compétences, formations, expériences), CV (import PDF, analyse IA, ajout au profil), offres, candidatures |
 | `features/recruiter` | Tableau de bord, entreprise & profil, offres (liste, création, modification), candidats d'une offre, détail d'une candidature |
 | `features/admin` | Espace minimal : statistiques, utilisateurs, entreprises, offres |
+| `features/hr` | Risque de turnover (Machine Learning) : formulaire des 24 variables, score, niveau, facteurs et avertissement ; route `turnover` des espaces recruteur et admin |
 
 ## Sécurité
 

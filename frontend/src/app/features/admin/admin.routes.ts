@@ -23,4 +23,9 @@ export default [
     loadComponent: () => import('./admin-jobs-page').then((m) => m.AdminJobsPage),
     title: 'Offres — Administration',
   },
+  {
+    path: 'turnover',
+    loadComponent: () => import('../hr/turnover-prediction-page').then((m) => m.TurnoverPredictionPage),
+    title: 'Risque de turnover — Administration',
+  },
 ] satisfies Routes;

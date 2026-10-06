@@ -6,7 +6,7 @@ Application web de recrutement : les entreprises publient des offres, les candid
 et un module d'IA analyse les CV, calcule un score de compatibilité explicable avec les offres
 et répond aux questions via un chatbot RH.
 
-> **État du projet : ÉTAPES 1 (architecture), 2 (MySQL + Spring Boot), 3 (entités JPA), 4 (JWT + rôles), 5 (profils, entreprises, offres, candidatures), 6 (frontend Angular connecté au backend), 7 (socle du service IA FastAPI relié à Spring Boot), 8 (CV Parser + NLP : import d'un CV PDF et extraction automatique des compétences, formations, expériences et langues), 9 (matching CV ↔ offre : score de compatibilité explicable et classement des candidats) et 10 (chatbot RH : questions en langage naturel sur les offres publiées et la plateforme) terminées.** Ce README sera complété à l'étape 14.
+> **État du projet : ÉTAPES 1 (architecture), 2 (MySQL + Spring Boot), 3 (entités JPA), 4 (JWT + rôles), 5 (profils, entreprises, offres, candidatures), 6 (frontend Angular connecté au backend), 7 (socle du service IA FastAPI relié à Spring Boot), 8 (CV Parser + NLP : import d'un CV PDF et extraction automatique des compétences, formations, expériences et langues), 9 (matching CV ↔ offre : score de compatibilité explicable et classement des candidats), 10 (chatbot RH : questions en langage naturel sur les offres publiées et la plateforme) et 11 (Machine Learning : estimation explicable du risque de turnover, modèle entraîné sur le dataset public et fictif IBM HR Analytics) terminées.** Ce README sera complété à l'étape 14.
 
 ## Démarrage rapide (provisoire)
 
@@ -45,6 +45,7 @@ Détails : [docs/architecture.md](docs/architecture.md) — Modèle de données 
 — Module IA CV Parser (méthode, bibliothèques, évaluation, limites) : [docs/ai/cv-parser.md](docs/ai/cv-parser.md)
 — Module IA Matching (formule, pondérations, exemples, limites, version) : [docs/ai/matching.md](docs/ai/matching.md)
 — Chatbot RH (architecture, NLP, intentions, exemples, sécurité, limites) : [docs/ai/chatbot.md](docs/ai/chatbot.md)
+— Machine Learning, risque de turnover (dataset, modèles comparés, métriques réelles, limites, éthique) : [docs/ai/turnover-ml.md](docs/ai/turnover-ml.md)
 
 ## Arborescence
 
@@ -53,7 +54,7 @@ smartrecruit-ai/
 ├── backend/        API Spring Boot (Java 21, Maven Wrapper)
 ├── frontend/       Application Angular
 ├── ai-service/     Service IA FastAPI (Python)
-│   └── ml/         Entraînement ML hors ligne (datasets et modèles non versionnés)
+│   └── ml/         Entraînement ML hors ligne (dataset et modèle non versionnés, rapport d'évaluation versionné)
 ├── database/       Documentation MySQL et données de démonstration (migrations : Flyway dans backend/)
 ├── docs/           Architecture, workflow Git, répartition, documentation IA
 ├── scripts/        Scripts de test de bout en bout

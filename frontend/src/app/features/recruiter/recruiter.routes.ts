@@ -37,4 +37,9 @@ export default [
     loadComponent: () => import('./application-detail-page').then((m) => m.ApplicationDetailPage),
     title: 'Candidature — Espace recruteur',
   },
+  {
+    path: 'turnover',
+    loadComponent: () => import('../hr/turnover-prediction-page').then((m) => m.TurnoverPredictionPage),
+    title: 'Risque de turnover — Espace recruteur',
+  },
 ] satisfies Routes;

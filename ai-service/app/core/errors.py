@@ -45,7 +45,8 @@ async def _validation_exception_handler(request: Request, exc: RequestValidation
     fields: dict[str, str] = {}
     for error in exc.errors():
         location = [str(part) for part in error.get("loc", ()) if part not in ("body", "query", "path", "header")]
-        fields.setdefault(".".join(location) or "body", error.get("msg", "Valeur invalide"))
+        message = str(error.get("msg", "Valeur invalide")).removeprefix("Value error, ")
+        fields.setdefault(".".join(location) or "body", message)
     return error_response(400, "Données invalides", request.url.path, fields)
 
 

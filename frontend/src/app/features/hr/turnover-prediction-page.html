@@ -1,0 +1,150 @@
+<h1 class="page-title">Risque de turnover <span class="badge text-bg-light border align-middle fs-6">Machine Learning</span></h1>
+<p class="page-subtitle">
+  Estimation du risque de départ d'un employé par un modèle entraîné sur le dataset public et fictif
+  « IBM HR Analytics Employee Attrition &amp; Performance ». L'âge, le genre et la situation familiale ne sont jamais utilisés.
+</p>
+
+<div class="alert alert-warning d-flex gap-2" role="note" data-testid="turnover-disclaimer">
+  <i aria-hidden="true" class="bi bi-info-circle-fill"></i>
+  <div>{{ disclaimer }}</div>
+</div>
+
+<div class="row g-4">
+  <div class="col-xl-7">
+    <form class="card" [formGroup]="form" (ngSubmit)="submit()" novalidate data-testid="turnover-form">
+      <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span class="section-title"><i aria-hidden="true" class="bi bi-ui-checks me-2 text-primary"></i>Variables de l'employé</span>
+        <div class="d-flex flex-wrap gap-2">
+          @for (example of examples; track example.label; let i = $index) {
+            <button class="btn btn-outline-secondary btn-sm" type="button" (click)="fillExample(i)" [attr.data-testid]="'turnover-example-' + (i + 1)">
+              {{ example.label }}
+            </button>
+          }
+          <button class="btn btn-link btn-sm" type="button" (click)="clear()" data-testid="turnover-clear">Effacer</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <p class="small text-secondary">Tous les champs sont obligatoires. Les bornes correspondent aux valeurs présentes dans le dataset d'entraînement.</p>
+        @for (section of sections; track section.title) {
+          <fieldset class="mb-3">
+            <legend class="fs-6 fw-semibold border-bottom pb-1"><i aria-hidden="true" class="bi {{ section.icon }} me-2 text-primary"></i>{{ section.title }}</legend>
+            <div class="row g-3">
+              @for (field of section.fields; track field.key) {
+                <div class="col-md-6">
+                  <label class="form-label required" [for]="'t-' + field.key">{{ field.label }}</label>
+                  @if (field.options) {
+                    <select class="form-select" [id]="'t-' + field.key" [formControlName]="field.key" [class.is-invalid]="invalid(field.key)" [attr.data-testid]="'t-' + field.key">
+                      <option [ngValue]="null" disabled>Choisir...</option>
+                      @for (option of optionsFor(field); track option.value) {
+                        <option [ngValue]="option.value">{{ option.label }}</option>
+                      }
+                    </select>
+                  } @else {
+                    <input class="form-control" type="number" step="1" [id]="'t-' + field.key" [formControlName]="field.key"
+                           [attr.min]="field.min" [attr.max]="field.max" [placeholder]="field.min + ' à ' + field.max"
+                           [class.is-invalid]="invalid(field.key)" [attr.data-testid]="'t-' + field.key" />
+                  }
+                  @if (field.hint) {
+                    <div class="form-text">{{ field.hint }}</div>
+                  }
+                  <app-field-error [control]="control(field.key)" [messages]="{ integer: 'Saisissez un nombre entier.' }" />
+                </div>
+              }
+            </div>
+          </fieldset>
+        }
+        @if (consistencyErrors().length > 0 && form.touched) {
+          <div class="alert alert-danger py-2 small" data-testid="turnover-consistency">
+            @for (message of consistencyErrors(); track message) {
+              <div>{{ message }}</div>
+            }
+          </div>
+        }
+        @if (error()) {
+          <div class="alert alert-danger py-2" role="alert" data-testid="turnover-error">{{ error() }}</div>
+        }
+      </div>
+      <div class="card-footer bg-white text-end">
+        <button class="btn btn-primary" type="submit" [disabled]="sending()" data-testid="turnover-submit">
+          @if (sending()) {
+            <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+          } @else {
+            <i aria-hidden="true" class="bi bi-graph-up-arrow me-1"></i>
+          }
+          Estimer le risque
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="col-xl-5">
+    @if (result(); as r) {
+      <div class="card border-{{ riskLevels[r.riskLevel].css }}" data-testid="turnover-result" [attr.data-level]="r.riskLevel">
+        <div class="card-header bg-white section-title"><i aria-hidden="true" class="bi bi-clipboard-data me-2 text-primary"></i>Estimation du modèle</div>
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+            <span class="badge fs-6 text-bg-{{ riskLevels[r.riskLevel].css }}" data-testid="turnover-level">
+              <i aria-hidden="true" class="bi {{ riskLevels[r.riskLevel].icon }} me-1"></i>{{ riskLevels[r.riskLevel].label }}
+            </span>
+            <span class="fs-4 fw-semibold" data-testid="turnover-probability">{{ percent(r.probability) }}</span>
+          </div>
+          <div class="progress mb-2" role="progressbar" aria-label="Score de risque estimé" [attr.aria-valuenow]="r.probability * 100" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar bg-{{ riskLevels[r.riskLevel].css }}" [style.width.%]="r.probability * 100"></div>
+          </div>
+          <p class="small text-secondary mb-3" data-testid="turnover-score-explanation">
+            Score de risque estimé par le modèle (probabilité de départ selon le modèle, pas une certitude).
+            Faible sous {{ percent(r.mediumThreshold) }}, moyen jusqu'à {{ percent(r.highThreshold) }}, élevé au-delà.
+          </p>
+
+          <h2 class="fs-6 fw-semibold">Principaux facteurs</h2>
+          <p class="small text-secondary">
+            @if (r.model.explanationMethod === 'OCCLUSION') {
+              Variation du score quand la variable est remplacée par une valeur de référence (valeur médiane ou la plus fréquente du jeu d'entraînement).
+            } @else {
+              Contribution de chaque variable au score du modèle linéaire, par rapport à un employé moyen du jeu d'entraînement.
+            }
+            Ces facteurs décrivent le comportement du modèle, pas une cause réelle du départ.
+          </p>
+          <ul class="list-unstyled mb-3" data-testid="turnover-factors">
+            @for (factor of r.factors; track factor.feature) {
+              <li class="mb-2" data-testid="turnover-factor" [attr.data-feature]="factor.feature" [attr.data-direction]="factor.direction">
+                <div class="d-flex justify-content-between gap-2">
+                  <span><strong>{{ factor.label }}</strong> : {{ enteredValue(factor) }}</span>
+                  @if (factor.direction === 'INCREASES_RISK') {
+                    <span class="text-danger text-nowrap small"><i aria-hidden="true" class="bi bi-arrow-up-right"></i> augmente le risque</span>
+                  } @else {
+                    <span class="text-success text-nowrap small"><i aria-hidden="true" class="bi bi-arrow-down-right"></i> diminue le risque</span>
+                  }
+                </div>
+                <div class="progress my-1" style="height: 6px" aria-hidden="true">
+                  <div class="progress-bar" [class.bg-danger]="factor.direction === 'INCREASES_RISK'" [class.bg-success]="factor.direction === 'DECREASES_RISK'"
+                       [style.width.%]="barWidth(factor, r.factors)"></div>
+                </div>
+                <div class="small text-secondary">{{ impactText(factor, r.model.explanationMethod) }}</div>
+              </li>
+            }
+          </ul>
+
+          <div class="small border-top pt-2" data-testid="turnover-model">
+            <div><strong>Modèle :</strong> {{ modelNames[r.model.name] }} v{{ r.model.version }} — {{ r.model.dataset }} (données fictives)</div>
+            <div>
+              <strong>Mesuré sur le jeu de test :</strong> ROC-AUC {{ metric(r.model.testRocAuc) }} · rappel {{ percent(r.model.testRecall) }} ·
+              précision {{ percent(r.model.testPrecision) }} · F1 {{ metric(r.model.testF1) }} · accuracy {{ percent(r.model.testAccuracy) }}
+            </div>
+          </div>
+          <div class="alert alert-warning small mt-3 mb-0" data-testid="turnover-result-disclaimer">{{ disclaimer }}</div>
+        </div>
+      </div>
+    } @else {
+      <div class="card">
+        <div class="card-body text-secondary small">
+          <p><i aria-hidden="true" class="bi bi-lightbulb me-1"></i>Renseignez les variables puis cliquez sur « Estimer le risque ».</p>
+          <p class="mb-0">
+            Le résultat affiche un score de risque, un niveau (faible / moyen / élevé), les variables qui ont le plus influencé le modèle et
+            ses performances réellement mesurées. Aucune donnée saisie n'est enregistrée.
+          </p>
+        </div>
+      </div>
+    }
+  </div>
+</div>

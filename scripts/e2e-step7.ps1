@@ -39,8 +39,8 @@ try {
     $r = Invoke-Api GET "$aiUrl/api/status" -Headers @{ $keyHeader = $aiKey }
     $modules = @($r.Json.modules.PSObject.Properties)
     $available = @($modules | Where-Object { $_.Value -eq $true } | ForEach-Object { $_.Name })
-    Assert-Check "GET /api/status avec la clé de .env -> 200, 4 modules (cv_parser, matching, chatbot disponibles)" ($r.Code -eq 200 -and $modules.Count -eq 4 -and
-        (($available | Sort-Object) -join ",") -eq "chatbot,cv_parser,matching")
+    Assert-Check "GET /api/status avec la clé de .env -> 200, 4 modules disponibles (cv_parser, matching, chatbot, ml)" ($r.Code -eq 200 -and $modules.Count -eq 4 -and
+        (($available | Sort-Object) -join ",") -eq "chatbot,cv_parser,matching,ml")
     $r = Invoke-Api GET "$aiUrl/docs"
     Assert-Check "Documentation Swagger désactivée par défaut -> 404" ($r.Code -eq 404)
     $listen = @(Get-NetTCPConnection -LocalPort $aiPort -State Listen -ErrorAction SilentlyContinue)

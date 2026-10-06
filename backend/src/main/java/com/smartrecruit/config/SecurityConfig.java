@@ -35,6 +35,7 @@ import java.util.List;
  * /api/admin/**                          ADMIN
  * /api/recruiter/**                      RECRUTEUR
  * /api/candidate/**                      CANDIDAT
+ * /api/hr/**                             ADMIN ou RECRUTEUR (outils RH, ex. risque de turnover)
  * tout le reste                          utilisateur connecté
  * </pre>
  */
@@ -65,6 +66,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/recruiter/**").hasRole("RECRUTEUR")
                         .requestMatchers("/api/candidate/**").hasRole("CANDIDAT")
+                        .requestMatchers("/api/hr/**").hasAnyRole("ADMIN", "RECRUTEUR")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     # Même variable que Spring Boot (MAX_CV_SIZE_MB) : taille maximale d'un CV accepté.
     max_cv_size_mb: int = Field(default=5, ge=1, le=20)
     ai_cv_max_pages: int = Field(default=10, ge=1, le=50)
+    # Dossier du modèle ML produit par « python -m ml.train » (fichiers non versionnés).
+    ai_ml_model_dir: Path = SERVICE_DIR / "ml" / "artifacts"
 
     @field_validator("ai_internal_api_key")
     @classmethod

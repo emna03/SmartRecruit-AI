@@ -13,7 +13,7 @@ def test_status_with_valid_key(client, auth_headers):
     assert body["status"] == "UP"
     assert body["service"] == SERVICE_NAME
     assert body["version"] == __version__
-    # Le module ML (étape 11) n'est pas encore implémenté : il ne doit pas être annoncé.
+    # Sans modèle entraîné chargé, le module ML (étape 11) ne doit pas être annoncé disponible.
     assert body["modules"] == {"cv_parser": True, "matching": True, "chatbot": True, "ml": False}
 
 

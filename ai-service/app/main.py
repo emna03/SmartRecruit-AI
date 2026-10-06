@@ -12,6 +12,7 @@ from app.api.router import internal_router, public_router
 from app.core.config import Settings, get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logs import configure_logging, register_request_logging
+from app.services.ml.model import load_model
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -28,6 +29,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         openapi_url="/openapi.json" if docs else None,
     )
     app.state.settings = settings
+    # Modèle chargé une seule fois ; None si absent ou invalide (le module ML est alors annoncé indisponible).
+    app.state.turnover_model = load_model(settings.ai_ml_model_dir)
 
     register_exception_handlers(app)
     register_request_logging(app)

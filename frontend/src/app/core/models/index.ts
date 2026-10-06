@@ -8,3 +8,4 @@ export * from './job.models';
 export * from './labels';
 export * from './matching.models';
 export * from './recruiter.models';
+export * from './turnover.models';

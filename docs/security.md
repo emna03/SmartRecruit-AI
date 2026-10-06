@@ -20,6 +20,7 @@ Contenu du jeton : `sub` (id utilisateur), `email`, `role`, `iss` = `smartrecrui
 | `/api/admin/**` | `ADMIN` |
 | `/api/recruiter/**` | `RECRUTEUR` |
 | `/api/candidate/**` | `CANDIDAT` |
+| `/api/hr/**` | `ADMIN` ou `RECRUTEUR` (outils RH : risque de turnover) |
 | tout le reste | utilisateur connecté |
 
 Convention pour les modules suivants : placer les endpoints sous le préfixe du rôle concerné
@@ -118,6 +119,20 @@ Toutes les erreurs ont le même format JSON :
 - Les questions ne sont ni enregistrées (ni en base, ni dans le navigateur) ni journalisées : les journaux ne
   contiennent que l'intention et des compteurs.
 - Détails : [ai/chatbot.md](ai/chatbot.md#8-sécurité-et-données-personnelles).
+
+## Risque de turnover (Machine Learning)
+
+- `POST /api/hr/turnover/predictions` réservé aux rôles `ADMIN` et `RECRUTEUR` (anonyme → 401, candidat → 403).
+- Minimisation : 24 variables professionnelles seulement, sans identité ; âge, genre et situation familiale ne sont
+  ni demandés ni utilisés par le modèle. Spring Boot transmet uniquement ces champs (un champ inconnu envoyé par le
+  navigateur est ignoré) et FastAPI refuse tout champ supplémentaire (400).
+- Validation stricte des deux côtés (types, bornes du dataset, cohérence) ; la réponse du modèle est validée par
+  Bean Validation avant affichage (niveau cohérent avec le score, facteurs connus, au plus 5) — sinon 503.
+- Rien n'est enregistré ; journaux : niveau, score et modèle uniquement, jamais les valeurs saisies.
+- Le modèle est un fichier local non versionné : FastAPI refuse de le charger si son empreinte SHA-256 ou la version
+  de scikit-learn ne correspond pas à ses métadonnées (pas de prédiction de secours).
+- La prédiction est une estimation de démonstration, affichée avec un avertissement, jamais une décision RH.
+  Détails : [ai/turnover-ml.md](ai/turnover-ml.md#13-aspects-éthiques).
 
 ## Mesures de protection
 

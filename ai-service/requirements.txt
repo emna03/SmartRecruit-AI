@@ -7,3 +7,13 @@ pydantic-settings==2.15.0
 # CV Parser (étape 8) : extraction du texte PDF (moteur pdfminer.six) et correspondance approchée des titres
 pdfplumber==0.11.10
 rapidfuzz==3.14.6
+# Machine Learning (étape 11) : entraînement et prédiction du risque de turnover.
+# scipy 1.16 / scikit-learn 1.7 : versions dont les DLL ne sont pas bloquées par le contrôle d'application
+# Windows (Smart App Control) sur le poste de développement. Le modèle sauvegardé exige la même version de
+# scikit-learn que celle de l'entraînement.
+numpy==2.5.3
+pandas==3.0.6
+scipy==1.16.3
+scikit-learn==1.7.2
+joblib==1.6.0
+threadpoolctl==3.7.0

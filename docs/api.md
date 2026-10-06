@@ -160,6 +160,30 @@ Fonctionnement, intentions, sécurité et limites : [ai/chatbot.md](ai/chatbot.m
 - Service IA indisponible, ou réponse invalide ou citant une offre non envoyée → 503. Les questions ne sont ni
   enregistrées ni journalisées.
 
+## Risque de turnover — Machine Learning (`ADMIN`, `RECRUTEUR`)
+
+Dataset, modèles comparés, métriques réelles, limites et éthique : [ai/turnover-ml.md](ai/turnover-ml.md).
+Estimation de démonstration, jamais une décision : rien n'est enregistré et aucune action n'est déclenchée.
+
+| Méthode | Chemin | Corps | Réponse |
+|---|---|---|---|
+| POST | `/api/hr/turnover/predictions` | 24 variables d'un employé (voir ci-dessous), sans identité ni âge, genre ou situation familiale | `{probability, riskLevel, mediumThreshold, highThreshold, factors[], model}` |
+
+- Corps : entiers `distanceFromHome` (1–29), `education` (1–5), `environmentSatisfaction`, `jobInvolvement`,
+  `jobSatisfaction`, `relationshipSatisfaction`, `workLifeBalance` (1–4), `jobLevel` (1–5), `monthlyIncome`
+  (1 009–19 999), `numCompaniesWorked` (0–9), `percentSalaryHike` (11–25), `performanceRating` (3–4),
+  `stockOptionLevel` (0–3), `totalWorkingYears` (0–40), `trainingTimesLastYear` (0–6), `yearsAtCompany` (0–40),
+  `yearsInCurrentRole` (0–18), `yearsSinceLastPromotion` (0–15), `yearsWithCurrManager` (0–17) ; booléen `overTime` ;
+  `businessTravel` ∈ `NON_TRAVEL, TRAVEL_RARELY, TRAVEL_FREQUENTLY` ; `department` ∈ `SALES, RESEARCH_DEVELOPMENT,
+  HUMAN_RESOURCES` ; `jobRole` (9 postes, compatible avec le département) ; `educationField` (6 domaines).
+- Réponse : `probability` entre 0 et 1 (score du modèle, pas une certitude) ; `riskLevel` ∈ `FAIBLE` (< 0,30),
+  `MOYEN` (< 0,50), `ELEVE` ; `factors` : au plus 5 `{feature, label, impact, direction: INCREASES_RISK |
+  DECREASES_RISK, referenceValue}` ; `model` : `{name, version, dataset, explanationMethod, testAccuracy,
+  testPrecision, testRecall, testF1, testRocAuc}`.
+- Champ manquant, hors bornes, de mauvais type ou incohérent (ancienneté > expérience totale, poste hors
+  département…) → 400 ; anonyme → 401 ; candidat → 403 ; service IA indisponible, modèle non entraîné ou réponse
+  invalide → 503.
+
 ## Administration (`ADMIN`)
 
 | Méthode | Chemin | Description |
@@ -183,3 +207,6 @@ Fonctionnement, intentions, sécurité et limites : [ai/chatbot.md](ai/chatbot.m
   panne du service IA, invalidation (50 vérifications, service IA arrêté au départ).
 - Chatbot : `ChatbotApiTest` (9) ; `scripts/e2e-step10.ps1` : questions réelles → Spring Boot → FastAPI, réponses
   comparées aux offres publiées de MySQL, panne du service IA, journaux (42 vérifications, service IA arrêté au départ).
+- Turnover : `TurnoverPredictionApiTest` (11), `TurnoverAiUnreachableTest` (1) ; `scripts/e2e-step11.ps1` :
+  réentraînement reproductible, vraies prédictions Spring Boot → FastAPI → modèle, entrées invalides, accès, panne du
+  service IA, journaux (36 vérifications, service IA arrêté au départ, dataset téléchargé).
