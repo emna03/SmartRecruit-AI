@@ -1,0 +1,31 @@
+# Base MySQL de développement. Les identifiants sont lus depuis le fichier .env (racine).
+# Démarrer : docker compose up -d mysql
+name: smartrecruit
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: smartrecruit-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-smartrecruit}
+      MYSQL_USER: ${DB_USER:-smartrecruit}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD manquant dans .env}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD manquant dans .env}
+      TZ: UTC
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      # Exposé uniquement sur la machine locale
+      - "127.0.0.1:${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  mysql_data:

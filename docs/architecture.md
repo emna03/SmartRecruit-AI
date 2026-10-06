@@ -155,7 +155,7 @@ Toutes les valeurs sensibles sont lues depuis des variables d'environnement. Le 
 | Domaine        | Choix                                   | Justification |
 |----------------|-----------------------------------------|---------------|
 | Frontend       | Angular + TypeScript + Bootstrap        | imposé ; Bootstrap simple et responsive |
-| Backend        | Spring Boot 3, Java 21, Maven Wrapper   | imposé ; Java 21 déjà installé, wrapper = pas besoin d'installer Maven |
+| Backend        | Spring Boot 4.1, Java 21, Maven Wrapper | imposé ; Java 21 déjà installé, wrapper = pas besoin d'installer Maven |
 | Sécurité       | Spring Security + JWT stateless         | séparation front/back, gestion des rôles |
 | Base           | MySQL (compatible MariaDB XAMPP)        | imposé ; schéma géré par scripts de migration |
 | IA             | Python + FastAPI                        | écosystème NLP/ML (pdfplumber, spaCy/regex, scikit-learn) |

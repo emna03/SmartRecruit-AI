@@ -64,4 +64,5 @@ Exemples :
 - Chaque membre travaille principalement dans **son package / dossier** (voir `docs/team-modules.md`).
 - Fichiers partagés (`pom.xml`, `package.json`, `app.routes.ts`, `requirements.txt`, scripts SQL) :
   modifications courtes, annoncées à l'équipe, mergées rapidement.
-- Migrations SQL : un nouveau fichier numéroté par changement, ne jamais modifier une migration déjà mergée.
+- Migrations Flyway (`backend/src/main/resources/db/migration/`) : un nouveau fichier numéroté par changement,
+  ne jamais modifier une migration déjà mergée. En cas de numéro identique entre deux branches, renuméroter avant le merge.

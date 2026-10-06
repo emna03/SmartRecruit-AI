@@ -6,7 +6,16 @@ Application web de recrutement : les entreprises publient des offres, les candid
 et un module d'IA analyse les CV, calcule un score de compatibilité explicable avec les offres
 et répond aux questions via un chatbot RH.
 
-> **État du projet : ÉTAPE 1 (architecture) terminée.** Ce README sera complété à l'étape 14.
+> **État du projet : ÉTAPES 1 (architecture) et 2 (MySQL + Spring Boot) terminées.** Ce README sera complété à l'étape 14.
+
+## Démarrage rapide (provisoire)
+
+```bash
+cp .env.example .env              # remplir les mots de passe et secrets
+docker compose up -d mysql        # MySQL 8.4
+cd backend && mvnw.cmd spring-boot:run
+# GET http://localhost:8080/actuator/health -> {"status":"UP"}
+```
 
 ## Architecture
 
@@ -30,7 +39,7 @@ smartrecruit-ai/
 ├── frontend/       Application Angular
 ├── ai-service/     Service IA FastAPI (Python)
 │   └── ml/         Entraînement ML hors ligne (datasets et modèles non versionnés)
-├── database/       Migrations et données de démonstration MySQL
+├── database/       Documentation MySQL et données de démonstration (migrations : Flyway dans backend/)
 ├── docs/           Architecture, workflow Git, répartition, documentation IA
 ├── .github/        Modèle de Pull Request
 └── .env.example    Modèle des variables d'environnement

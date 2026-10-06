@@ -21,5 +21,5 @@ Ces contrats permettent de travailler en parallèle. Toute modification doit êt
 
 ## Fichiers partagés (à modifier avec précaution)
 
-`backend/pom.xml`, `backend/src/main/resources/application.yml`, `database/migrations/`,
+`backend/pom.xml`, `backend/src/main/resources/application.yml`, `backend/src/main/resources/db/migration/`,
 `frontend/package.json`, `frontend/src/app/app.routes.ts`, `ai-service/requirements.txt`, `README.md`.

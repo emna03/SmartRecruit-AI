@@ -1,0 +1,54 @@
+# Toutes les valeurs sensibles viennent des variables d'environnement ou du fichier .env
+# (backend/.env ou .env à la racine du dépôt). Voir .env.example.
+spring:
+  application:
+    name: smartrecruit-backend
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:smartrecruit}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Le schéma est géré exclusivement par Flyway ; Hibernate vérifie seulement la cohérence.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  servlet:
+    multipart:
+      max-file-size: ${MAX_CV_SIZE_MB:5}MB
+      max-request-size: ${MAX_CV_SIZE_MB:5}MB
+
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-stacktrace: never
+    include-message: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
+  upload-dir: ${UPLOAD_DIR:./uploads}
+  ai-service:
+    url: ${AI_SERVICE_URL:http://localhost:8000}
+    api-key: ${AI_INTERNAL_API_KEY:}
+    timeout-seconds: ${AI_TIMEOUT_SECONDS:20}
