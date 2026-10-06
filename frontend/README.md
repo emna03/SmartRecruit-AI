@@ -29,8 +29,9 @@ npm run e2e          # parcours complet Angular -> Spring Boot -> MySQL (Playwri
 Le test e2e nécessite MySQL et le backend démarrés (le serveur Angular est lancé automatiquement s'il ne tourne pas) ;
 `cv-flow.e2e.ts` (import et analyse d'un CV PDF fictif) nécessite aussi le service IA FastAPI démarré, et vérifie
 les données enregistrées directement dans MySQL (conteneur `smartrecruit-mysql`) ; `matching-flow.e2e.ts` fait de même
-pour le score de compatibilité (CV → offre → score → MySQL → affichage candidat → classement recruteur).
-Il crée des comptes `e2e6-*` / `e2e8-*` / `e2e9-*@test.local` et des entreprises `E2E6 *` / `E2E9 *`, puis les supprime via l'API admin
+pour le score de compatibilité (CV → offre → score → MySQL → affichage candidat → classement recruteur), et
+`chatbot-flow.e2e.ts` pour l'Assistant RH (connexion candidat → question → réponse basée sur les offres publiées de MySQL).
+Il crée des comptes `e2e6-*` à `e2e10-*@test.local` et des entreprises `E2E6 *` à `E2E10 *`, puis les supprime via l'API admin
 (identifiants lus dans `../.env`). `E2E_KEEP_DATA=1` conserve les données pour les inspecter dans MySQL.
 Captures d'écran : `e2e/screenshots/` (non versionné).
 

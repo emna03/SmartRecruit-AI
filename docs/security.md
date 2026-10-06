@@ -107,6 +107,18 @@ Toutes les erreurs ont le même format JSON :
 - Journaux : identifiants, score et compteurs uniquement (jamais de nom, d'email ni de compétence).
 - Les scores sont supprimés avec le CV, avec le compte ou l'offre (cascade MySQL), et quand les critères de l'offre changent.
 
+## Chatbot RH
+
+- `POST /api/candidate/chatbot/messages` réservé au rôle `CANDIDAT` (anonyme → 401, recruteur / admin → 403).
+- Le service IA reçoit la question et des **données publiques** des offres publiées (titre, entreprise, ville,
+  contrat, expérience, niveau, salaire, compétences) : aucune donnée sur le candidat (identité, CV, candidatures).
+  Aucun LLM ni service externe n'est appelé.
+- La réponse est validée (Pydantic puis Bean Validation, listes fermées d'intentions et d'actions) ; si elle cite une
+  offre absente du catalogue envoyé, elle est rejetée (503). Les cartes d'offres affichées sont relues dans MySQL.
+- Les questions ne sont ni enregistrées (ni en base, ni dans le navigateur) ni journalisées : les journaux ne
+  contiennent que l'intention et des compteurs.
+- Détails : [ai/chatbot.md](ai/chatbot.md#8-sécurité-et-données-personnelles).
+
 ## Mesures de protection
 
 - Mots de passe hachés avec **BCrypt** ; le hash n'est jamais renvoyé par l'API.

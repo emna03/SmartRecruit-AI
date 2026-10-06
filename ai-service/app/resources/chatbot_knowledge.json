@@ -1,0 +1,168 @@
+{
+  "version": "1.0",
+  "_comment": "Exemples d'entraînement de la classification d'intention (similarité TF-IDF) et réponses de la FAQ. Marqueurs remplaçant les entités détectées : xskill (compétence), xnombre (nombre d'années), xcontrat (type de contrat), xville (ville d'une offre), xdiplome (diplôme ou niveau). Un titre d'offre cité est remplacé par « cette offre ».",
+  "defaultSuggestions": [
+    "Quelles offres correspondent à Java ?",
+    "Comment importer mon CV ?",
+    "Comment postuler à une offre ?",
+    "Comment fonctionne le score de compatibilité ?"
+  ],
+  "offerSuggestions": [
+    "Quelles sont les compétences demandées pour cette offre ?",
+    "Combien d'années d'expérience sont nécessaires ?",
+    "Quel niveau d'étude est demandé ?",
+    "Comment postuler à une offre ?"
+  ],
+  "unknownAnswer": "Je ne sais pas répondre à cette question. Je réponds uniquement à partir des offres publiées sur SmartRecruit et du fonctionnement de la plateforme : recherche d'offres, détails d'une offre, CV, candidature et score de compatibilité. Reformulez votre question ou essayez une des suggestions.",
+  "intents": {
+    "GREETING": {
+      "examples": [
+        "bonjour", "salut", "bonsoir", "hello", "coucou", "hey", "bonjour l'assistant", "salut, j'ai une question",
+        "bonjour, j'ai besoin d'aide", "hi"
+      ],
+      "answer": "Bonjour ! Je suis l'assistant RH de SmartRecruit. Je peux rechercher les offres publiées par compétence, type de contrat ou ville, détailler une offre (compétences, expérience, niveau d'études, salaire) et expliquer le fonctionnement de la plateforme (CV, candidature, score de compatibilité)."
+    },
+    "THANKS": {
+      "examples": [
+        "merci", "merci beaucoup", "super merci", "parfait merci", "thanks", "merci pour ton aide", "merci bien",
+        "c'est gentil merci", "ok merci"
+      ],
+      "answer": "Avec plaisir ! N'hésitez pas si vous avez une autre question."
+    },
+    "HELP": {
+      "examples": [
+        "aide", "help", "que peux-tu faire ?", "que sais-tu faire ?", "comment peux-tu m'aider ?",
+        "quelles questions puis-je te poser ?", "tu sers à quoi ?", "à quoi sers-tu ?", "quelles sont tes fonctionnalités ?",
+        "qui es-tu ?", "comment utiliser l'assistant ?"
+      ],
+      "answer": "Je réponds à partir des offres réellement publiées sur SmartRecruit et du fonctionnement de la plateforme. Exemples : « Quelles offres correspondent à Java ? », « Je cherche un stage à Tunis », « Quelles sont les compétences demandées pour cette offre ? », « Combien d'années d'expérience sont nécessaires ? », « Comment importer mon CV ? », « Comment fonctionne le score de compatibilité ? ». Pour une question sur une offre précise, ouvrez-la et cliquez sur « Poser une question à l'assistant », ou choisissez-la dans une de mes réponses."
+    },
+    "SEARCH_OFFERS": {
+      "examples": [
+        "quelles offres correspondent à xskill ?", "je cherche un poste xskill", "je cherche un emploi en xskill",
+        "quelles offres demandent xskill ?", "y a-t-il des offres xskill ?", "offres xskill", "des postes en xskill ?",
+        "je veux travailler avec xskill", "montre-moi les offres xskill", "trouve-moi un poste xskill",
+        "des offres qui demandent xskill et xskill ?", "combien d'offres demandent xskill ?",
+        "avez-vous des offres en xcontrat ?", "je cherche un xcontrat", "je cherche un xcontrat en xskill",
+        "offres à xville", "des offres en xcontrat à xville ?", "y a-t-il des postes à xville ?",
+        "quelles offres sont disponibles ?", "quelles sont les offres publiées ?", "je cherche un emploi",
+        "je cherche du travail", "liste des offres", "y a-t-il des postes ouverts ?", "quels postes sont proposés ?",
+        "je recherche une offre d'emploi", "je cherche un poste de développeur", "offres de data scientist",
+        "j'ai xnombre ans d'expérience, quelles offres ?", "offres accessibles avec xnombre ans d'expérience",
+        "des offres pour débutant ?", "offres sans expérience", "je suis xdiplome, quelles offres puis-je viser ?",
+        "offres avec un niveau xdiplome", "offres chez une entreprise", "les dernières offres"
+      ]
+    },
+    "OFFER_SKILLS": {
+      "examples": [
+        "quelles sont les compétences demandées pour cette offre ?", "quelles compétences faut-il pour ce poste ?",
+        "quelles technologies demande cette offre ?", "compétences requises pour l'offre",
+        "quelles sont les compétences requises ?", "ce poste demande quelles technologies ?",
+        "quels outils faut-il maîtriser pour cette offre ?", "est-ce que cette offre demande xskill ?",
+        "faut-il connaître xskill pour ce poste ?", "xskill est-il requis pour cette offre ?",
+        "liste des compétences de cette offre", "quelles connaissances techniques pour ce poste ?"
+      ]
+    },
+    "OFFER_EXPERIENCE": {
+      "examples": [
+        "combien d'années d'expérience sont nécessaires ?", "quelle expérience est demandée ?",
+        "combien d'années d'expérience faut-il pour cette offre ?", "faut-il de l'expérience pour ce poste ?",
+        "expérience minimale demandée", "cette offre accepte-t-elle les débutants ?",
+        "est-ce que ce poste est ouvert aux débutants ?", "j'ai xnombre ans d'expérience, est-ce suffisant pour cette offre ?",
+        "combien d'ans d'expérience pour ce poste ?", "nombre d'années d'expérience requis",
+        "quelle expérience faut-il avoir ?"
+      ]
+    },
+    "OFFER_EDUCATION": {
+      "examples": [
+        "quel niveau d'étude est demandé ?", "quel diplôme faut-il ?", "quel niveau d'études faut-il pour cette offre ?",
+        "quelle formation est demandée pour ce poste ?", "faut-il un xdiplome pour ce poste ?",
+        "un xdiplome suffit-il pour cette offre ?", "niveau d'étude requis", "quelles études sont nécessaires ?",
+        "niveau de diplôme minimum", "quel niveau de formation est exigé ?", "quel diplôme est requis pour cette offre ?"
+      ]
+    },
+    "OFFER_DETAILS": {
+      "examples": [
+        "parle-moi de cette offre", "donne-moi les détails de cette offre", "résume cette offre",
+        "où se trouve ce poste ?", "quel est le type de contrat de cette offre ?", "est-ce un xcontrat ?",
+        "quelle entreprise propose cette offre ?", "où est situé le poste ?", "informations sur ce poste",
+        "décris-moi l'offre", "c'est quel contrat ?", "dans quelle ville est ce poste ?"
+      ]
+    },
+    "OFFER_SALARY": {
+      "examples": [
+        "quel est le salaire ?", "combien paie ce poste ?", "quelle est la rémunération de cette offre ?",
+        "salaire proposé pour ce poste", "c'est payé combien ?", "fourchette de salaire", "quel salaire pour cette offre ?",
+        "rémunération"
+      ]
+    },
+    "FAQ_APPLY": {
+      "examples": [
+        "comment postuler à une offre ?", "comment candidater ?", "comment envoyer ma candidature ?", "comment je postule ?",
+        "je veux postuler, comment faire ?", "comment répondre à une offre ?",
+        "faut-il une lettre de motivation pour postuler ?", "comment déposer une candidature ?", "procédure pour postuler",
+        "où est le bouton postuler ?", "puis-je postuler plusieurs fois ?"
+      ],
+      "answer": "Pour postuler : ouvrez une offre depuis « Offres », cliquez sur « Postuler à cette offre », ajoutez si vous le souhaitez une lettre de motivation (facultative, 5 000 caractères maximum) puis cliquez sur « Envoyer ». On ne peut postuler qu'une fois par offre, et seulement aux offres publiées. Suivez ensuite l'avancement dans « Mes candidatures ».",
+      "actions": ["OPEN_JOBS", "OPEN_APPLICATIONS"]
+    },
+    "FAQ_CV": {
+      "examples": [
+        "comment importer mon CV ?", "comment déposer mon CV ?", "comment ajouter mon CV ?", "comment télécharger mon CV ?",
+        "où mettre mon CV ?", "quel format de CV est accepté ?", "mon CV n'est pas analysé, que faire ?",
+        "comment fonctionne l'analyse du CV ?", "je veux mettre à jour mon CV", "comment remplacer mon CV ?",
+        "upload CV", "taille maximale du CV", "pourquoi mon CV scanné n'est pas analysé ?", "comment supprimer mon CV ?",
+        "envoyer mon curriculum vitae"
+      ],
+      "answer": "Allez dans « Mon CV », puis glissez votre fichier ou cliquez pour le choisir. Le CV doit être un PDF dont le texte est sélectionnable (un CV scanné ne peut pas être analysé), dans la limite de taille indiquée sur la page. L'analyse automatique extrait vos compétences, technologies, formations, expériences et langues ; vous pouvez ensuite les ajouter à votre profil avec « Ajouter au profil ». Si l'analyse échoue, cliquez sur « Réessayer l'analyse ». Depuis cette page, vous pouvez aussi remplacer ou supprimer votre CV. Un CV analysé permet de calculer votre score de compatibilité avec chaque offre.",
+      "actions": ["OPEN_CV"]
+    },
+    "FAQ_MATCHING": {
+      "examples": [
+        "comment fonctionne le score de compatibilité ?", "comment est calculé le score ?", "c'est quoi le matching ?",
+        "que signifie mon score de compatibilité ?", "comment est calculée la compatibilité ?", "pourquoi mon score est faible ?",
+        "comment améliorer mon score ?", "le score décide-t-il de mon recrutement ?", "comment marche le matching ?",
+        "pourcentage de compatibilité", "comment sont classés les candidats ?"
+      ],
+      "answer": "Le score de compatibilité (de 0 à 100 %) compare les informations extraites de votre CV aux exigences de l'offre. Compétences (60 % du score) : part des compétences requises retrouvées dans votre CV, une technologie proche comptant pour moitié. Expérience (25 %) : vos mois d'expérience par rapport aux années demandées. Niveau d'études (15 %) : 40 points retirés par niveau manquant. Si l'offre n'exige pas d'expérience ou de niveau, son poids est réparti sur les autres critères. Le calcul est déterministe et expliqué (compétences trouvées et manquantes). C'est une aide pour le recruteur, jamais une décision automatique. Votre score s'affiche sur la page de chaque offre lorsque votre CV est analysé ; pour l'améliorer, complétez votre CV avec les compétences que vous maîtrisez réellement.",
+      "actions": ["OPEN_JOBS", "OPEN_CV"]
+    },
+    "FAQ_APPLICATIONS": {
+      "examples": [
+        "comment suivre ma candidature ?", "où voir mes candidatures ?", "quel est le statut de ma candidature ?",
+        "que veut dire présélectionné ?", "ma candidature a-t-elle été acceptée ?", "où voir la réponse du recruteur ?",
+        "que signifie en attente ?", "statut de candidature", "suivi de mes candidatures"
+      ],
+      "answer": "Vos candidatures et leur statut se trouvent dans « Mes candidatures » : « En attente » (pas encore traitée), « Présélectionné », « Accepté » ou « Refusé ». Le statut change dès que le recruteur le met à jour. Pour protéger vos données, je n'ai pas accès à vos candidatures : consultez cette page.",
+      "actions": ["OPEN_APPLICATIONS"]
+    },
+    "FAQ_PROFILE": {
+      "examples": [
+        "comment modifier mon profil ?", "comment ajouter mes compétences à mon profil ?", "comment mettre à jour mes expériences ?",
+        "où modifier mes informations ?", "comment ajouter une formation à mon profil ?",
+        "changer mon niveau d'études dans mon profil", "compléter mon profil"
+      ],
+      "answer": "Dans « Mon profil », vous pouvez modifier vos informations (titre, résumé, téléphone, ville, années d'expérience, niveau d'études), vos compétences, vos formations et vos expériences. Vous pouvez aussi remplir le profil automatiquement depuis « Mon CV » avec « Ajouter au profil ».",
+      "actions": ["OPEN_PROFILE", "OPEN_CV"]
+    },
+    "FAQ_PRIVACY": {
+      "examples": [
+        "mes données sont-elles protégées ?", "qui peut voir mon CV ?", "que faites-vous de mes données personnelles ?",
+        "mes questions sont-elles enregistrées ?", "confidentialité", "mes informations sont-elles partagées ?",
+        "vie privée", "est-ce que tu gardes mes messages ?"
+      ],
+      "answer": "Votre fichier CV n'est visible que par vous ; les recruteurs voient le profil et le score de compatibilité des candidats qui ont postulé à leurs offres. Pour l'analyse et le score, seules les informations utiles (compétences, durée d'expérience, niveau d'études) sont envoyées au service IA interne, jamais à un service externe. Je ne reçois pas votre identité, je ne conserve pas vos questions et elles ne sont pas écrites dans les journaux. Vous pouvez supprimer votre CV à tout moment depuis « Mon CV ».",
+      "actions": ["OPEN_CV"]
+    },
+    "FAQ_RECOMMENDATION": {
+      "examples": [
+        "quelles offres me correspondent ?", "quelle offre est faite pour moi ?", "recommande-moi une offre",
+        "quelles offres sont compatibles avec mon profil ?", "quelle offre me convient le mieux ?",
+        "suis-je compatible avec cette offre ?", "ai-je le bon profil pour ce poste ?", "quel est mon score pour cette offre ?",
+        "est-ce que je corresponds à cette offre ?"
+      ],
+      "answer": "Je ne consulte pas votre CV, pour protéger vos données. Pour savoir si une offre vous correspond, ouvrez-la : votre score de compatibilité, calculé à partir de votre CV analysé, s'affiche sur sa page avec les compétences trouvées et manquantes. Vous pouvez aussi me demander les offres d'une technologie, par exemple « Quelles offres correspondent à Java ? ».",
+      "actions": ["OPEN_JOBS", "OPEN_CV"]
+    }
+  }
+}

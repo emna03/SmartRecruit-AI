@@ -1,6 +1,7 @@
 export * from './application.models';
 export * from './auth.models';
 export * from './candidate.models';
+export * from './chatbot.models';
 export * from './common.models';
 export * from './cv.models';
 export * from './job.models';

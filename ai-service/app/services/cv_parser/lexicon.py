@@ -89,18 +89,22 @@ class Lexicon:
 
     def find(self, text: str) -> Counter[LexiconEntry]:
         """Nombre d'occurrences de chaque entrée du lexique dans ``text``."""
-        counts: Counter[LexiconEntry] = Counter()
+        return Counter(entry for _, _, entry in self.find_spans(text))
+
+    def find_spans(self, text: str) -> list[tuple[int, int, LexiconEntry]]:
+        """Occurrences des entrées du lexique avec leur position (``fold`` conserve la longueur du texte)."""
+        spans: list[tuple[int, int, LexiconEntry]] = []
         if self._insensitive:
             for match in self._insensitive.finditer(fold(text)):
                 entry = self._by_key.get(_key(match.group(0)))
                 if entry:
-                    counts[entry] += 1
+                    spans.append((match.start(), match.end(), entry))
         if self._sensitive:
             for match in self._sensitive.finditer(_strip_accents(text)):
                 entry = self._by_case_key.get(_key(match.group(0)))
                 if entry:
-                    counts[entry] += 1
-        return counts
+                    spans.append((match.start(), match.end(), entry))
+        return sorted(spans, key=lambda span: span[0])
 
 
 @lru_cache

@@ -149,6 +149,17 @@
             }
           </div>
         </div>
+
+        @if (isCandidate()) {
+          <div class="card mt-3">
+            <div class="card-body">
+              <p class="small text-secondary mb-2">Une question sur les compétences, l'expérience ou le niveau demandés ?</p>
+              <a class="btn btn-outline-primary w-100" routerLink="/candidate/assistant" [queryParams]="{ offre: job.id }" data-testid="ask-assistant">
+                <i aria-hidden="true" class="bi bi-chat-dots me-1"></i>Poser une question à l'assistant
+              </a>
+            </div>
+          </div>
+        }
       </div>
     </div>
   }

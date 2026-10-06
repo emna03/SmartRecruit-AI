@@ -97,8 +97,9 @@ test.afterAll(async ({ request }) => {
   }
   const login = await request.post('/api/auth/login', { data: { email: envValue('ADMIN_EMAIL'), password: envValue('ADMIN_PASSWORD') } });
   const headers = { Authorization: `Bearer ${(await login.json()).accessToken}` };
-  if (offerId) {
-    await request.delete(`/api/admin/jobs/${offerId}`, { headers });
+  const companies = await (await request.get('/api/admin/companies', { headers })).json();
+  for (const company of companies.filter((c: { name: string }) => c.name === `E2E9 Corp ${suffix}`)) {
+    await request.delete(`/api/admin/companies/${company.id}`, { headers });
   }
   const users = await (await request.get('/api/admin/users', { headers })).json();
   for (const user of users.filter((u: { email: string }) => u.email.startsWith('e2e9-'))) {

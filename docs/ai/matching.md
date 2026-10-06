@@ -216,7 +216,7 @@ pondérations ou des règles de correspondance doit changer cette version (et `v
 | FastAPI (pytest) | 52 | `test_matching_skills` (15 : exacte, impliquée transitive, proche, normalisation, dédoublonnage), `test_matching_scoring` (21 : formules, bornes, redistribution des poids), `test_matching_engine` (10 : vrais CV fictifs analysés — très / partiellement / peu compatible, aucune compétence commune, expérience et niveau insuffisants, déterminisme), `test_matching_route` (6 : clé interne, validation, champ personnel refusé, journaux sans compétence) |
 | Spring Boot (JUnit) | 11 | `MatchingApiTest` : calcul et enregistrement, critères non exigés, CV absent / non analysé, IA indisponible (dernier score), réponses IA invalides, visibilité de l'offre et rôles, classement, recalcul recruteur, candidature malgré la panne, invalidation (CV, offre), cascade |
 | Angular (Vitest) | 16 | carte de résultat (sous-scores, poids, compétences, avertissement), états de la page offre, classement et recalcul recruteur, service HTTP |
-| E2E API + MySQL | 49 vérifications | `scripts/e2e-step9.ps1` : vrais CV → FastAPI → MySQL, classement, panne du service IA, invalidation, journaux |
+| E2E API + MySQL | 50 vérifications | `scripts/e2e-step9.ps1` : vrais CV → FastAPI → MySQL, classement, panne du service IA, invalidation, journaux |
 | E2E navigateur | 4 | `frontend/e2e/matching-flow.e2e.ts` (Playwright) : candidat → CV → offre → score → MySQL → classement recruteur |
 
 Captures : `frontend/e2e/screenshots/14-candidat-score-compatibilite.png`, `15-recruteur-classement-scores.png`,

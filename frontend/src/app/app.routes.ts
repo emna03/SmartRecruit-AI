@@ -17,6 +17,7 @@ const CANDIDATE_SPACE: SpaceConfig = {
     { path: '/candidate/cv', label: 'Mon CV', icon: 'bi-file-earmark-person' },
     { path: '/candidate/jobs', label: 'Offres', icon: 'bi-search' },
     { path: '/candidate/applications', label: 'Mes candidatures', icon: 'bi-send' },
+    { path: '/candidate/assistant', label: 'Assistant RH', icon: 'bi-chat-dots' },
   ],
 };
 

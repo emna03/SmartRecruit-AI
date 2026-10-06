@@ -50,7 +50,7 @@ function MatchRow([string]$email, $offer, [string]$columns) {
 }
 
 $rec = Register "rec" "Rania" "RECRUTEUR"
-Invoke-Api POST /api/recruiter/company @{ name = "E2E9 Corp $suffix"; sector = "IT"; location = "Tunis" } -Token $rec.Token | Out-Null
+$companies = @((Invoke-Api POST /api/recruiter/company @{ name = "E2E9 Corp $suffix"; sector = "IT"; location = "Tunis" } -Token $rec.Token).Json.id)
 $fr = Register "fr" "Camille" "CANDIDAT"
 $en = Register "en" "Alex" "CANDIDAT"
 $min = Register "min" "Sami" "CANDIDAT"
@@ -144,7 +144,7 @@ try {
     $detail = Invoke-Api GET "/api/recruiter/applications/$($list[0].id)" -Token $rec.Token
     Assert-Check "Détail de candidature : score et explication" ($detail.Json.matching.score -eq 90 -and $detail.Json.matching.explanation -like "Score global*")
     $other = Register "other" "Omar" "RECRUTEUR"
-    Invoke-Api POST /api/recruiter/company @{ name = "E2E9 Autre $suffix"; sector = "IT"; location = "Sfax" } -Token $other.Token | Out-Null
+    $companies += (Invoke-Api POST /api/recruiter/company @{ name = "E2E9 Autre $suffix"; sector = "IT"; location = "Sfax" } -Token $other.Token).Json.id
     Assert-Check "Autre recruteur : recalcul -> 404" ((Invoke-Api POST "/api/recruiter/jobs/$offer/matching" -Token $other.Token).Code -eq 404)
 
     "--- Recalcul par le recruteur ---"
@@ -219,10 +219,13 @@ try {
 } finally {
     Stop-Ai $ai
     Remove-Item $aiLog, "$aiLog.out" -ErrorAction SilentlyContinue
-    "--- Nettoyage (suppression des comptes par l'admin) ---"
+    "--- Nettoyage (suppression des comptes puis des entreprises de test et de leurs offres par l'admin) ---"
     foreach ($u in $users.Values) { if ($u.Id) { Invoke-Api DELETE "/api/admin/users/$($u.Id)" -Token $adminToken | Out-Null } }
     $left = (Invoke-Sql "SELECT COUNT(*) FROM matching_results WHERE job_offer_id IN ($offer, $devops, $senior)")[0][0]
     Assert-Check "Comptes supprimés : plus aucun score lié (cascade MySQL)" ($left -eq "0")
+    foreach ($id in $companies) { if ($id) { Invoke-Api DELETE "/api/admin/companies/$id" -Token $adminToken | Out-Null } }
+    $left = (Invoke-Sql "SELECT COUNT(*) FROM job_offers WHERE id IN ($offer, $devops, $senior)")[0][0]
+    Assert-Check "Entreprises de test supprimées avec leurs offres (aucune offre de test ne reste publiée)" ($left -eq "0")
 }
 
 Write-Summary

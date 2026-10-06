@@ -36,4 +36,9 @@ export default [
     loadComponent: () => import('./candidate-applications-page').then((m) => m.CandidateApplicationsPage),
     title: 'Mes candidatures — Espace candidat',
   },
+  {
+    path: 'assistant',
+    loadComponent: () => import('./chatbot/chatbot-page').then((m) => m.ChatbotPage),
+    title: 'Assistant RH — Espace candidat',
+  },
 ] satisfies Routes;

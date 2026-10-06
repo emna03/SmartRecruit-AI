@@ -1,0 +1,117 @@
+.chat-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-body {
+  height: min(60vh, 34rem);
+  min-height: 18rem;
+  overflow-y: auto;
+  padding: 1rem;
+  background: var(--sr-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.chat-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+
+  &.me {
+    justify-content: flex-end;
+  }
+}
+
+.bubble {
+  max-width: min(85%, 42rem);
+  padding: 0.65rem 0.9rem;
+  border-radius: 1rem;
+  word-wrap: break-word;
+}
+
+.bubble-me {
+  background: var(--sr-primary);
+  color: #fff;
+  border-bottom-right-radius: 0.25rem;
+  white-space: pre-line;
+}
+
+.bubble-bot {
+  background: #fff;
+  border: 1px solid var(--sr-border);
+  border-bottom-left-radius: 0.25rem;
+}
+
+.bubble-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  border-bottom-left-radius: 0.25rem;
+}
+
+.chat-avatar {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+
+  &.sm {
+    width: 1.9rem;
+    height: 1.9rem;
+    font-size: 0.85rem;
+  }
+
+  &.error {
+    background: #dc2626;
+  }
+}
+
+.chat-offers {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.chat-offer {
+  border: 1px solid var(--sr-border);
+  border-radius: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--sr-primary-soft);
+}
+
+.context-chip {
+  display: inline-block;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: var(--sr-primary-soft);
+  color: var(--sr-primary-dark);
+  font-size: 0.875rem;
+}
+
+.suggestion {
+  border: 1px solid var(--sr-primary);
+  color: var(--sr-primary);
+  border-radius: 999px;
+  background: #fff;
+
+  &:hover:not(:disabled) {
+    background: var(--sr-primary-soft);
+  }
+}
+
+@media (max-width: 575.98px) {
+  .chat-body {
+    height: 55vh;
+    padding: 0.75rem;
+  }
+
+  .bubble {
+    max-width: 92%;
+  }
+}

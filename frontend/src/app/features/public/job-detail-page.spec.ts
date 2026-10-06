@@ -114,5 +114,12 @@ describe('JobDetailPage — compatibilité', () => {
 
     http.expectNone('/api/candidate/jobs/5/matching');
     expect(el.querySelector('[data-testid=matching-card]')).toBeNull();
+    expect(el.querySelector('[data-testid=ask-assistant]')).toBeNull();
+  });
+
+  it('lets a candidate ask the HR assistant about this offer', async () => {
+    const { el } = await open('CANDIDAT', { status: 'CALCULE', message: 'Score calculé', result: matchingResult() });
+
+    expect(el.querySelector('[data-testid=ask-assistant]')?.getAttribute('href')).toBe('/candidate/assistant?offre=5');
   });
 });

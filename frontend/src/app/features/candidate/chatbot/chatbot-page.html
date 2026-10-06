@@ -1,0 +1,159 @@
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="page-title mb-0">Assistant RH</h1>
+  @if (conversation.messages().length > 0) {
+    <button class="btn btn-outline-secondary btn-sm" type="button" (click)="newConversation()" data-testid="chat-reset">
+      <i aria-hidden="true" class="bi bi-arrow-counterclockwise me-1"></i>Nouvelle conversation
+    </button>
+  }
+</div>
+
+<div class="card chat-card">
+  <div class="card-header bg-white d-flex align-items-center gap-2">
+    <span class="chat-avatar"><i aria-hidden="true" class="bi bi-robot"></i></span>
+    <div class="lh-sm">
+      <div class="fw-semibold">Assistant SmartRecruit</div>
+      <div class="small text-secondary" data-testid="chat-disclaimer">
+        Réponses basées uniquement sur les offres publiées et le fonctionnement de la plateforme. L'assistant ne prend aucune décision de recrutement.
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-body" #scroller role="log" aria-live="polite" aria-label="Conversation avec l'assistant" data-testid="chat-messages">
+    <div class="chat-row bot">
+      <span class="chat-avatar sm"><i aria-hidden="true" class="bi bi-robot"></i></span>
+      <div class="bubble bubble-bot">
+        Bonjour ! Je peux rechercher des offres publiées (compétence, contrat, ville), détailler une offre
+        (compétences, expérience, niveau d'études, salaire) et expliquer le CV, la candidature et le score de compatibilité.
+      </div>
+    </div>
+
+    @for (message of conversation.messages(); track message.id) {
+      @if (message.author === 'candidate') {
+        <div class="chat-row me">
+          <div class="bubble bubble-me" data-testid="chat-user-message">{{ message.text }}</div>
+        </div>
+      } @else if (message.failedQuestion) {
+        <div class="chat-row bot">
+          <span class="chat-avatar sm error"><i aria-hidden="true" class="bi bi-exclamation-triangle"></i></span>
+          <div class="bubble bubble-error" role="alert" data-testid="chat-error">
+            <div>{{ message.text }}</div>
+            <button class="btn btn-sm btn-outline-danger mt-2" type="button" (click)="retry(message)" [disabled]="sending()" data-testid="chat-retry">
+              <i aria-hidden="true" class="bi bi-arrow-clockwise me-1"></i>Réessayer
+            </button>
+          </div>
+        </div>
+      } @else if (message.reply; as reply) {
+        <div class="chat-row bot">
+          <span class="chat-avatar sm"><i aria-hidden="true" class="bi bi-robot"></i></span>
+          <div class="bubble bubble-bot" data-testid="chat-bot-message" [attr.data-intent]="reply.intent">
+            <p class="text-pre-line mb-0" data-testid="chat-answer">{{ reply.answer }}</p>
+
+            @if (understood(reply.entities); as items) {
+              @if (items.length > 0) {
+                <div class="small text-secondary mt-2" data-testid="chat-understood">
+                  <i aria-hidden="true" class="bi bi-lightbulb me-1"></i>Compris : {{ items.join(' · ') }}
+                </div>
+              }
+            }
+
+            @if (reply.offers.length > 0) {
+              <div class="chat-offers mt-2">
+                @for (offer of reply.offers; track offer.id) {
+                  <div class="chat-offer" data-testid="chat-offer">
+                    <div class="fw-semibold" data-testid="chat-offer-title">{{ offer.title }}</div>
+                    <div class="small text-secondary mb-1">
+                      <i aria-hidden="true" class="bi bi-building me-1"></i>{{ offer.companyName }}
+                      @if (offer.location) {
+                        <span class="ms-2"><i aria-hidden="true" class="bi bi-geo-alt me-1"></i>{{ offer.location }}</span>
+                      }
+                      <span class="ms-2">{{ offer.contractType | label: 'contract' }}</span>
+                      <span class="ms-2">{{ offer.minExperienceYears }} an(s) d'exp.</span>
+                    </div>
+                    <div class="mb-2">
+                      @for (skill of offer.requiredSkills; track skill) {
+                        <span class="skill-badge small">{{ skill }}</span>
+                      }
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                      <a class="btn btn-primary btn-sm" [routerLink]="['/candidate/jobs', offer.id]" data-testid="chat-offer-link">
+                        <i aria-hidden="true" class="bi bi-box-arrow-up-right me-1"></i>Voir l'offre
+                      </a>
+                      @if (conversation.contextOffer()?.id !== offer.id) {
+                        <button class="btn btn-outline-primary btn-sm" type="button" (click)="selectOffer(offer)" data-testid="chat-offer-select">
+                          <i aria-hidden="true" class="bi bi-chat-dots me-1"></i>Poser une question sur cette offre
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+              @if (reply.totalMatches > reply.offers.length) {
+                <div class="small mt-2">
+                  {{ reply.totalMatches }} offres au total —
+                  <a routerLink="/candidate/jobs">voir toutes les offres</a>
+                </div>
+              }
+            }
+
+            @if (reply.actions.length > 0) {
+              <div class="d-flex flex-wrap gap-2 mt-2">
+                @for (action of reply.actions; track action) {
+                  <a class="btn btn-light border btn-sm" [routerLink]="actionLinks[action].route" data-testid="chat-action">
+                    <i aria-hidden="true" class="bi {{ actionLinks[action].icon }} me-1"></i>{{ actionLinks[action].label }}
+                  </a>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+    }
+
+    @if (sending()) {
+      <div class="chat-row bot" data-testid="chat-typing">
+        <span class="chat-avatar sm"><i aria-hidden="true" class="bi bi-robot"></i></span>
+        <div class="bubble bubble-bot text-secondary">
+          <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>L'assistant prépare sa réponse…
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="card-footer bg-white">
+    @if (contextError()) {
+      <div class="alert alert-warning py-2 small mb-2" data-testid="chat-context-error">{{ contextError() }}</div>
+    }
+    @if (conversation.contextOffer(); as offer) {
+      <div class="context-chip mb-2" data-testid="chat-context">
+        <i aria-hidden="true" class="bi bi-pin-angle me-1"></i>Question sur : <strong>{{ offer.title }}</strong> ({{ offer.companyName }})
+        <button class="btn btn-link btn-sm p-0 ms-2" type="button" (click)="clearContext()" aria-label="Retirer l'offre sélectionnée" data-testid="chat-context-clear">
+          <i aria-hidden="true" class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    }
+
+    <div class="d-flex flex-wrap gap-2 mb-2" data-testid="chat-suggestions">
+      @for (suggestion of conversation.suggestions(); track $index) {
+        <button class="btn btn-sm suggestion" type="button" (click)="send(suggestion)" [disabled]="sending()">{{ suggestion }}</button>
+      }
+    </div>
+
+    <form class="d-flex gap-2 align-items-end" (submit)="onSubmit($event)">
+      <div class="flex-grow-1">
+        <label class="visually-hidden" for="chat-question">Votre question</label>
+        <textarea id="chat-question" #questionInput class="form-control" rows="2" [formControl]="question"
+                  [attr.maxlength]="maxLength" placeholder="Posez votre question… (Entrée pour envoyer, Maj+Entrée pour aller à la ligne)"
+                  (keydown.enter)="onEnter($event)" data-testid="chat-input"></textarea>
+        <div class="form-text text-end">{{ question.value.length }}/{{ maxLength }}</div>
+      </div>
+      <button class="btn btn-primary mb-4" type="submit" [disabled]="!canSend()" data-testid="chat-send">
+        @if (sending()) {
+          <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+        } @else {
+          <i aria-hidden="true" class="bi bi-send"></i>
+        }
+        <span class="ms-1 d-none d-sm-inline">Envoyer</span>
+      </button>
+    </form>
+  </div>
+</div>

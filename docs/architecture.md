@@ -19,7 +19,7 @@
 │ Service IA FastAPI :8000 │
 │  ├─ cv_parser   (PDF → texte → NLP → JSON)
 │  ├─ matching    (CV ↔ offre → score 0-100 explicable)
-│  ├─ chatbot     (FAQ + offres, LLM optionnel)
+│  ├─ chatbot     (intentions + offres publiées, NLP local)
 │  └─ ml          (modèle prédictif, si dataset disponible)
 └──────────────────────────┘
 ```
@@ -67,15 +67,16 @@ Formule (compétences 60 %, expérience 25 %, formation 15 %), exemples et limit
 ### 2.3 Chatbot RH
 
 ```
-Utilisateur → Angular (widget) → Spring Boot /api/chatbot
-  → Spring Boot ajoute un contexte NON personnel (offres publiées : titre, compétences, entreprise)
-  → FastAPI /api/chatbot/ask
-       ├─ intention reconnue (FAQ / recherche d'offres) → réponse déterministe
-       └─ sinon, si LLM configuré → LLM avec timeout, réponse validée
-            └─ sinon / erreur → réponse de repli
+Candidat → Angular (Assistant RH) → Spring Boot POST /api/candidate/chatbot/messages
+  → Spring Boot ajoute un contexte NON personnel (offres publiées : titre, entreprise, ville, contrat,
+    expérience, niveau, salaire, compétences)
+  → FastAPI /api/chatbot/ask : entités + intention (NLP local déterministe) → réponse construite sur ces offres
+       └─ question hors domaine → « Je ne sais pas répondre » (jamais de réponse inventée)
+  → Spring Boot vérifie que les offres citées font partie du catalogue envoyé → Angular
 ```
 
-Aucune donnée personnelle brute (nom, email, téléphone, contenu de CV) n'est envoyée au LLM.
+Aucun LLM n'est intégré (choix argumenté dans [ai/chatbot.md](ai/chatbot.md#pourquoi-pas-de-llm-externe)) ;
+aucune donnée sur le candidat (identité, CV, candidatures) n'est envoyée au service IA.
 
 ## 3. Structure des modules
 
@@ -116,7 +117,7 @@ frontend/src/app/
 ├── layout/          # navbar, sidebar, layouts par rôle
 ├── features/
 │   ├── public/      # accueil, login, register, jobs, jobs/:id
-│   ├── candidate/   # dashboard, profile, cv, jobs, applications
+│   ├── candidate/   # dashboard, profile, cv, jobs, applications, chatbot (Assistant RH)
 │   ├── recruiter/   # dashboard, company, jobs, jobs/create, jobs/:id/candidates
 │   ├── admin/       # dashboard, users, companies, jobs
 │   └── chatbot/     # widget de chat
@@ -138,7 +139,7 @@ ai-service/
 │   ├── services/
 │   │   ├── cv_parser/ # extraction PDF, nettoyage, extraction NLP       (P3, étape 8)
 │   │   ├── matching/  # calcul du score explicable                      (P4, étape 9)
-│   │   ├── chatbot/   # intentions, base de connaissances, client LLM   (P5, étape 10)
+│   │   ├── chatbot/   # entités, intentions, recherche d'offres, réponses (P5, étape 10)
 │   │   └── ml/        # chargement du modèle et prédiction              (P5, étape 11)
 │   └── resources/     # référentiel de compétences, synonymes, FAQ      (à partir de l'étape 8)
 ├── ml/                # entraînement hors ligne : data/ (ignoré), artifacts/ (ignoré), train.py
@@ -169,4 +170,4 @@ Toutes les valeurs sensibles sont lues depuis des variables d'environnement. Le 
 | Base           | MySQL (compatible MariaDB XAMPP)        | imposé ; schéma géré par scripts de migration |
 | IA             | Python 3.13 + FastAPI, environnement virtuel `ai-service/.venv` | écosystème NLP/ML (pdfplumber, spaCy/regex, scikit-learn) |
 | Matching       | score pondéré explicable                | chaque point du score est justifiable (voir `docs/ai/`) |
-| Chatbot        | intentions + base de connaissances, LLM optionnel | fonctionne sans clé API, respecte les données personnelles |
+| Chatbot        | NLP local (entités + intentions TF-IDF) + base de connaissances, sans LLM | réponses fondées sur les vraies offres, sans clé API ni envoi de données à un tiers (voir `docs/ai/chatbot.md`) |

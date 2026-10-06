@@ -143,6 +143,23 @@ calculé avant la dernière mise à jour du CV.
 - Le score est aussi calculé automatiquement après une candidature (sans faire échouer la candidature).
 - Scores supprimés quand le CV est supprimé ou quand les compétences, l'expérience ou le niveau de l'offre changent.
 
+## Chatbot RH (`CANDIDAT`)
+
+Fonctionnement, intentions, sécurité et limites : [ai/chatbot.md](ai/chatbot.md).
+
+| Méthode | Chemin | Corps | Réponse |
+|---|---|---|---|
+| POST | `/api/candidate/chatbot/messages` | `{message, jobOfferId?}` — question (1 à 500 caractères) et offre en cours de discussion (facultative) | `{intent, answer, confidence, offers[], totalMatches, contextOffer, entities, suggestions[], actions[], chatbotVersion}` |
+
+- `offers` / `contextOffer` : `{id, title, companyName, location, contractType, minExperienceYears, educationLevel, requiredSkills}`,
+  relus dans MySQL ; uniquement des offres **publiées** (au plus 5 par réponse).
+- `entities` : ce que l'assistant a compris (`skills`, `experienceYears`, `educationLevel`, `contractType`, `location`, `keywords`) ;
+  `actions` ∈ `OPEN_JOBS`, `OPEN_CV`, `OPEN_APPLICATIONS`, `OPEN_PROFILE` (liens vers les pages de l'application).
+- Question vide, blanche ou trop longue → 400 ; anonyme → 401 ; recruteur ou admin → 403. `jobOfferId` d'une offre
+  non publiée ou inexistante : ignoré.
+- Service IA indisponible, ou réponse invalide ou citant une offre non envoyée → 503. Les questions ne sont ni
+  enregistrées ni journalisées.
+
 ## Administration (`ADMIN`)
 
 | Méthode | Chemin | Description |
@@ -163,4 +180,6 @@ calculé avant la dernière mise à jour du CV.
 - CV : `CandidateCvApiTest` (12), `CvFileValidatorTest` (13) ; `scripts/e2e-step8.ps1` : parcours réel
   Spring Boot → FastAPI → MySQL (47 vérifications, service IA arrêté au départ : le script le lance lui-même).
 - Matching : `MatchingApiTest` (11) ; `scripts/e2e-step9.ps1` : vrais CV → FastAPI → MySQL, classement recruteur,
-  panne du service IA, invalidation (49 vérifications, service IA arrêté au départ).
+  panne du service IA, invalidation (50 vérifications, service IA arrêté au départ).
+- Chatbot : `ChatbotApiTest` (9) ; `scripts/e2e-step10.ps1` : questions réelles → Spring Boot → FastAPI, réponses
+  comparées aux offres publiées de MySQL, panne du service IA, journaux (42 vérifications, service IA arrêté au départ).
