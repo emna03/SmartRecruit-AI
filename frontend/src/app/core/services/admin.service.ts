@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_URL } from '../api.config';
-import { Company, JobOffer, JobOfferStatus, Role, User } from '../models';
+import { AiServiceStatus, Company, JobOffer, JobOfferStatus, Role, User } from '../models';
 
 /** Endpoints d'administration (rôle ADMIN). */
 @Injectable({ providedIn: 'root' })
@@ -42,5 +42,9 @@ export class AdminService {
 
   deleteJob(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/jobs/${id}`);
+  }
+
+  aiStatus(): Observable<AiServiceStatus> {
+    return this.http.get<AiServiceStatus>(`${this.base}/ai/status`);
   }
 }

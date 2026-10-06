@@ -1,0 +1,165 @@
+@if (loading()) {
+  <app-loading-spinner />
+} @else if (error()) {
+  <div class="alert alert-danger" data-testid="dashboard-error">{{ error() }}</div>
+} @else if (profile(); as p) {
+  @if (dashboard(); as d) {
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+      <div>
+        <h1 class="page-title">Bonjour {{ p.firstName }}</h1>
+        <p class="page-subtitle">
+          @if (d.hasCompany) {
+            Statistiques des offres de <strong>{{ d.companyName }}</strong>
+          } @else {
+            Bienvenue dans votre espace recruteur.
+          }
+        </p>
+      </div>
+      @if (d.hasCompany) {
+        <a class="btn btn-primary" routerLink="/recruiter/jobs/create"><i aria-hidden="true" class="bi bi-plus-lg me-1"></i>Nouvelle offre</a>
+      }
+    </div>
+
+    @if (!d.hasCompany) {
+      <app-no-company-notice />
+    } @else {
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-xl-2" data-testid="kpi-offers">
+          <app-kpi-card label="Offres créées" [value]="d.totalOffers" icon="bi-list-task" link="/recruiter/jobs" />
+        </div>
+        <div class="col-6 col-md-4 col-xl-2" data-testid="kpi-published">
+          <app-kpi-card label="Publiées" [value]="d.offersByStatus.PUBLIEE" icon="bi-broadcast" tone="success" />
+        </div>
+        <div class="col-6 col-md-4 col-xl-2" data-testid="kpi-drafts">
+          <app-kpi-card label="Brouillons" [value]="d.offersByStatus.BROUILLON" icon="bi-pencil-square" tone="secondary" />
+        </div>
+        <div class="col-6 col-md-4 col-xl-2" data-testid="kpi-closed">
+          <app-kpi-card label="Fermées" [value]="d.offersByStatus.FERMEE" icon="bi-archive" tone="dark" />
+        </div>
+        <div class="col-6 col-md-4 col-xl-2" data-testid="kpi-applications">
+          <app-kpi-card label="Candidatures reçues" [value]="d.totalApplications" icon="bi-people" tone="info" />
+        </div>
+        <div class="col-6 col-md-4 col-xl-2" data-testid="kpi-average-score">
+          <app-kpi-card label="Score moyen de matching" icon="bi-bullseye" tone="warning"
+            [value]="d.averageMatchingScore === null ? '—' : (d.averageMatchingScore | number: '1.0-1') + ' / 100'"
+            [hint]="d.scoredApplications + ' candidature(s) avec score'" />
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+          <div class="card h-100">
+            <div class="card-header bg-white section-title">Candidats par offre et par statut</div>
+            <div class="card-body" data-testid="chart-applications-per-offer">
+              <app-chart type="bar" [horizontal]="true" [stacked]="true" label="Candidatures par offre et par statut"
+                [labels]="applicationsPerOffer().labels" [series]="applicationsPerOffer().series"
+                [height]="applicationsPerOffer().height" emptyText="Aucune candidature reçue pour le moment." />
+              @if (d.offers.length > applicationsPerOffer().labels.length && applicationsPerOffer().labels.length) {
+                <p class="small text-secondary mb-0 mt-2">Offres ayant reçu le plus de candidatures (10 au plus) ; détail complet dans le tableau ci-dessous.</p>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card h-100">
+            <div class="card-header bg-white section-title">Candidatures par statut</div>
+            <div class="card-body" data-testid="chart-applications-status">
+              <app-chart type="doughnut" label="Candidatures par statut" [labels]="statusChart().labels"
+                [series]="statusChart().series" emptyText="Aucune candidature reçue pour le moment." />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header bg-white section-title">Scores de matching par offre</div>
+            <div class="card-body" data-testid="chart-scores-per-offer">
+              <app-chart type="bar" [max]="100" unit=" / 100" label="Score moyen et meilleur score de matching par offre"
+                [labels]="scoreChart().labels" [series]="scoreChart().series"
+                emptyText="Aucun score : les scores sont calculés pour les candidats ayant un CV analysé." />
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card h-100">
+            <div class="card-header bg-white section-title">Candidatures reçues par mois</div>
+            <div class="card-body" data-testid="chart-applications-month">
+              <app-chart type="line" label="Candidatures reçues par mois (6 derniers mois)" [labels]="monthChart().labels"
+                [series]="monthChart().series" emptyText="Aucune candidature reçue sur les 6 derniers mois." />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header bg-white section-title">Meilleurs candidats selon le matching</div>
+        @if (d.topCandidates.length === 0) {
+          <div class="empty-state" data-testid="top-candidates-empty">
+            <i aria-hidden="true" class="bi bi-people"></i>Aucun candidat avec un score de compatibilité pour le moment.
+          </div>
+        } @else {
+          <div class="table-responsive">
+            <table class="table align-middle mb-0" data-testid="top-candidates">
+              <thead class="table-light"><tr><th>Candidat</th><th>Offre</th><th class="text-center">Score</th><th>Statut</th><th></th></tr></thead>
+              <tbody>
+                @for (c of d.topCandidates; track c.applicationId) {
+                  <tr data-testid="top-candidate">
+                    <td class="fw-semibold">{{ c.candidateName }}</td>
+                    <td>{{ c.jobTitle }}</td>
+                    <td class="text-center">
+                      <span class="badge text-bg-light border" data-testid="top-candidate-score">{{ c.score | number: '1.0-1' }} / 100</span>
+                      @if (c.stale) {
+                        <span class="badge text-bg-warning ms-1" title="Le CV a changé depuis ce calcul">À recalculer</span>
+                      }
+                    </td>
+                    <td><app-status-badge [status]="c.status" /></td>
+                    <td class="text-end"><a class="btn btn-sm btn-outline-primary" [routerLink]="['/recruiter/applications', c.applicationId]">Voir</a></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="card-footer bg-white small text-secondary">
+            <i aria-hidden="true" class="bi bi-info-circle me-1"></i>Classement indicatif selon le score de compatibilité CV ↔ offre :
+            aide à la lecture des candidatures, jamais une décision automatique. Les statuts restent modifiés par vous seul.
+          </div>
+        }
+      </div>
+
+      <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <span class="section-title">Mes offres</span>
+          <a routerLink="/recruiter/jobs" class="small">Gérer les offres</a>
+        </div>
+        @if (d.offers.length === 0) {
+          <div class="empty-state">
+            <i aria-hidden="true" class="bi bi-file-earmark-plus"></i>Vous n'avez pas encore créé d'offre.
+            <div><a class="btn btn-primary btn-sm mt-2" routerLink="/recruiter/jobs/create">Créer une offre</a></div>
+          </div>
+        } @else {
+          <div class="table-responsive">
+            <table class="table align-middle mb-0" data-testid="offers-table">
+              <thead class="table-light">
+                <tr><th>Offre</th><th>Statut</th><th class="text-center">Candidats</th><th class="text-center d-none d-md-table-cell">Score moyen</th><th class="d-none d-md-table-cell">Créée le</th><th></th></tr>
+              </thead>
+              <tbody>
+                @for (job of d.offers; track job.id) {
+                  <tr data-testid="offer-row">
+                    <td class="fw-semibold">{{ job.title }}</td>
+                    <td><app-status-badge [status]="job.status" kind="jobStatus" /></td>
+                    <td class="text-center" data-testid="offer-applications">{{ job.applications }}</td>
+                    <td class="text-center d-none d-md-table-cell">{{ job.averageScore === null ? '—' : (job.averageScore | number: '1.0-1') }}</td>
+                    <td class="d-none d-md-table-cell">{{ job.createdAt | date: 'dd/MM/yyyy' }}</td>
+                    <td class="text-end"><a class="btn btn-sm btn-outline-primary" [routerLink]="['/recruiter/jobs', job.id, 'candidates']">Candidats</a></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+  }
+}

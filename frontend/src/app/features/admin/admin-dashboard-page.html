@@ -1,0 +1,150 @@
+<h1 class="page-title">Administration</h1>
+<p class="page-subtitle">Vue d'ensemble de la plateforme, calculée à partir des données enregistrées.</p>
+@if (loading()) {
+  <app-loading-spinner />
+} @else if (error()) {
+  <div class="alert alert-danger" data-testid="dashboard-error">{{ error() }}</div>
+} @else if (dashboard(); as d) {
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-xl-2" data-testid="kpi-users">
+      <app-kpi-card label="Utilisateurs" [value]="d.totalUsers" icon="bi-people" link="/admin/users"
+        [hint]="d.disabledUsers + ' compte(s) désactivé(s)'" />
+    </div>
+    <div class="col-6 col-md-4 col-xl-2" data-testid="kpi-candidates">
+      <app-kpi-card label="Candidats" [value]="d.usersByRole.CANDIDAT" icon="bi-person-badge" link="/admin/users"
+        [hint]="d.candidatesWithCv + ' avec un CV'" />
+    </div>
+    <div class="col-6 col-md-4 col-xl-2" data-testid="kpi-recruiters">
+      <app-kpi-card label="Recruteurs" [value]="d.usersByRole.RECRUTEUR" icon="bi-briefcase" tone="info" link="/admin/users"
+        [hint]="d.recruitersWithoutCompany + ' sans entreprise'" />
+    </div>
+    <div class="col-6 col-md-4 col-xl-2" data-testid="kpi-companies">
+      <app-kpi-card label="Entreprises" [value]="d.companies" icon="bi-building" tone="secondary" link="/admin/companies" />
+    </div>
+    <div class="col-6 col-md-4 col-xl-2" data-testid="kpi-offers">
+      <app-kpi-card label="Offres" [value]="d.totalOffers" icon="bi-list-task" tone="success" link="/admin/jobs"
+        [hint]="d.offersByStatus.PUBLIEE + ' publiée(s)'" />
+    </div>
+    <div class="col-6 col-md-4 col-xl-2" data-testid="kpi-applications">
+      <app-kpi-card label="Candidatures" [value]="d.totalApplications" icon="bi-send" tone="warning" />
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-6 col-xl-4">
+      <div class="card h-100">
+        <div class="card-header bg-white section-title">Utilisateurs par rôle</div>
+        <div class="card-body" data-testid="chart-users-role">
+          <app-chart type="doughnut" label="Utilisateurs par rôle" [labels]="rolesChart().labels" [series]="rolesChart().series" [height]="230" />
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-xl-4">
+      <div class="card h-100">
+        <div class="card-header bg-white section-title">Offres par statut</div>
+        <div class="card-body" data-testid="chart-offers-status">
+          <app-chart type="doughnut" label="Offres par statut" [labels]="offersChart().labels" [series]="offersChart().series"
+            [height]="230" emptyText="Aucune offre créée." />
+        </div>
+      </div>
+    </div>
+    <div class="col-md-12 col-xl-4">
+      <div class="card h-100">
+        <div class="card-header bg-white section-title">Candidatures par statut</div>
+        <div class="card-body" data-testid="chart-applications-status">
+          <app-chart type="doughnut" label="Candidatures par statut" [labels]="applicationsChart().labels"
+            [series]="applicationsChart().series" [height]="230" emptyText="Aucune candidature." />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-lg-8">
+      <div class="card h-100">
+        <div class="card-header bg-white section-title">Activité des 6 derniers mois</div>
+        <div class="card-body" data-testid="chart-activity">
+          <app-chart type="line" label="Créations par mois : utilisateurs, offres et candidatures (6 derniers mois)"
+            [labels]="activityChart().labels" [series]="activityChart().series" emptyText="Aucune activité sur les 6 derniers mois." />
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-header bg-white section-title">CV et matching</div>
+        <ul class="list-group list-group-flush" data-testid="ai-usage">
+          <li class="list-group-item d-flex justify-content-between">
+            <span>CV importés</span><strong data-testid="cv-total">{{ d.candidatesWithCv }}</strong>
+          </li>
+          <li class="list-group-item d-flex justify-content-between ps-4 small">
+            <span>analysés</span><span data-testid="cv-analyzed">{{ d.cvsByParsingStatus.TERMINE }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between ps-4 small">
+            <span>analyse en échec</span><span data-testid="cv-failed">{{ d.cvsByParsingStatus.ECHEC }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between ps-4 small">
+            <span>analyse en cours</span><span>{{ d.cvsByParsingStatus.EN_COURS }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span>Scores de compatibilité enregistrés</span><strong data-testid="scores-total">{{ d.storedMatchingScores }}</strong>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span>Score moyen</span>
+            <strong data-testid="scores-average">{{ d.averageMatchingScore === null ? '—' : (d.averageMatchingScore | number: '1.0-1') + ' / 100' }}</strong>
+          </li>
+        </ul>
+        <div class="card-body small text-secondary pt-2">
+          Les scores incluent ceux calculés quand un candidat consulte une offre, avant de postuler.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header bg-white section-title">Compétences les plus demandées</div>
+        <div class="card-body" data-testid="chart-top-skills">
+          <app-chart type="bar" [horizontal]="true" label="Compétences les plus demandées par les offres publiées"
+            [labels]="skillsChart().labels" [series]="skillsChart().series" emptyText="Aucune offre publiée." />
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header bg-white section-title">Offres publiées par type de contrat</div>
+        <div class="card-body" data-testid="chart-contracts">
+          <app-chart type="bar" label="Offres publiées par type de contrat" [labels]="contractChart().labels"
+            [series]="contractChart().series" emptyText="Aucune offre publiée." />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-testid="turnover-card">
+    <div class="card-header bg-white section-title">Module Machine Learning — risque de turnover</div>
+    <div class="card-body">
+      <p class="mb-2" data-testid="ml-state" [attr.data-state]="mlState()">
+        @switch (mlState()) {
+          @case ('loading') {
+            <span class="text-secondary">Vérification du service IA…</span>
+          }
+          @case ('available') {
+            <i aria-hidden="true" class="bi bi-check-circle-fill text-success me-1"></i>Modèle chargé : prédictions disponibles.
+          }
+          @case ('unavailable') {
+            <i aria-hidden="true" class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Modèle non chargé : il doit être entraîné (python -m ml.train).
+          }
+          @case ('unreachable') {
+            <i aria-hidden="true" class="bi bi-x-circle-fill text-danger me-1"></i>Service IA injoignable : état du modèle inconnu.
+          }
+        }
+      </p>
+      <p class="small text-secondary mb-2">
+        Les prédictions ne sont pas enregistrées (aucune donnée saisie n'est conservée) : il n'existe donc aucune statistique
+        de prédiction à afficher.
+      </p>
+      <a class="btn btn-sm btn-outline-primary" routerLink="/admin/turnover">Ouvrir l'outil de prédiction</a>
+    </div>
+  </div>
+}

@@ -184,6 +184,22 @@ Estimation de démonstration, jamais une décision : rien n'est enregistré et a
   département…) → 400 ; anonyme → 401 ; candidat → 403 ; service IA indisponible, modèle non entraîné ou réponse
   invalide → 503.
 
+## Dashboards et statistiques
+
+KPI, origine des données, graphiques et limites : [dashboards.md](dashboards.md). Statistiques calculées à chaque
+appel depuis MySQL ; aucun paramètre : le périmètre vient du jeton (paramètre ajouté ignoré).
+
+| Méthode | Chemin | Rôle | Réponse |
+|---|---|---|---|
+| GET | `/api/candidate/dashboard` | `CANDIDAT` | `{totalApplications, applicationsByStatus, publishedOffers, publishedOffersNotApplied, cv: {state: ABSENT \| IMPORTE \| ANALYSE, parsingStatus, updatedAt, parsedAt, extractedSkills}, scoredOffers, topMatches[]: {jobOfferId, title, companyName, offerStatus, score, computedAt, stale, applied}}` |
+| GET | `/api/recruiter/dashboard` | `RECRUTEUR` | `{hasCompany, companyName, totalOffers, offersByStatus, totalApplications, applicationsByStatus, applicationsByMonth[]: {month, count}, scoredApplications, averageMatchingScore, offers[]: {id, title, status, createdAt, applications, applicationsByStatus, scoredApplications, averageScore, bestScore}, topCandidates[]: {applicationId, candidateName, jobOfferId, jobTitle, score, status, stale}}` |
+| GET | `/api/admin/dashboard` | `ADMIN` | `{totalUsers, usersByRole, disabledUsers, companies, recruitersWithoutCompany, totalOffers, offersByStatus, publishedOffersByContract, totalApplications, applicationsByStatus, candidatesWithCv, cvsByParsingStatus, storedMatchingScores, averageMatchingScore, topRequestedSkills[]: {skill, offers}, activityByMonth[]: {month, newUsers, newOffers, applications}}` |
+
+- Les répartitions (`…ByStatus`, `usersByRole`, `publishedOffersByContract`) contiennent toutes les valeurs de
+  l'énumération, à 0 si aucune ligne. Mois au format `AAAA-MM`, 6 derniers mois UTC, mois en cours compris.
+- Moyennes arrondies à 0,1 ; `null` quand aucun score n'existe. `topMatches` / `topCandidates` : 5 au plus.
+- Recruteur sans entreprise → 200 avec `hasCompany: false` et des compteurs à 0. Anonyme → 401 ; autre rôle → 403.
+
 ## Administration (`ADMIN`)
 
 | Méthode | Chemin | Description |
@@ -210,3 +226,6 @@ Estimation de démonstration, jamais une décision : rien n'est enregistré et a
 - Turnover : `TurnoverPredictionApiTest` (11), `TurnoverAiUnreachableTest` (1) ; `scripts/e2e-step11.ps1` :
   réentraînement reproductible, vraies prédictions Spring Boot → FastAPI → modèle, entrées invalides, accès, panne du
   service IA, journaux (36 vérifications, service IA arrêté au départ, dataset téléchargé).
+- Dashboards : `DashboardApiTest` (8), `DashboardQueryCountTest` (1) ; `scripts/e2e-step12.ps1` : chaque chiffre des
+  trois dashboards comparé à une requête SQL sur MySQL, avant/après candidatures et changements de statut, isolation
+  entre recruteurs, accès (102 vérifications, service IA arrêté au départ).

@@ -4,6 +4,7 @@ export * from './candidate.models';
 export * from './chatbot.models';
 export * from './common.models';
 export * from './cv.models';
+export * from './dashboard.models';
 export * from './job.models';
 export * from './labels';
 export * from './matching.models';

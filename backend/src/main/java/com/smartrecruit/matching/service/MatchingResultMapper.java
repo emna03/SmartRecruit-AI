@@ -54,8 +54,12 @@ public class MatchingResultMapper {
     }
 
     static boolean isStale(MatchingResult entity, Cv cv) {
-        return cv == null || cv.getParsingStatus() != CvParsingStatus.TERMINE || cv.getParsedAt() == null
-                || entity.getComputedAt().isBefore(cv.getParsedAt());
+        return cv == null || isStale(entity.getComputedAt(), cv.getParsingStatus(), cv.getParsedAt());
+    }
+
+    /** Score calculé avant la dernière analyse du CV, ou CV qui n'est plus analysé ({@code cvStatus} null : pas de CV). */
+    public static boolean isStale(LocalDateTime computedAt, CvParsingStatus cvStatus, LocalDateTime cvParsedAt) {
+        return cvStatus != CvParsingStatus.TERMINE || cvParsedAt == null || computedAt.isBefore(cvParsedAt);
     }
 
     private <T> List<T> read(MatchingResult entity, String json, TypeReference<List<T>> type) {

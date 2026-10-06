@@ -134,6 +134,19 @@ Toutes les erreurs ont le même format JSON :
 - La prédiction est une estimation de démonstration, affichée avec un avertissement, jamais une décision RH.
   Détails : [ai/turnover-ml.md](ai/turnover-ml.md#13-aspects-éthiques).
 
+## Dashboards et statistiques
+
+- `GET /api/candidate/dashboard`, `/api/recruiter/dashboard`, `/api/admin/dashboard` : protégés par les règles de
+  préfixe ci-dessus (anonyme → 401, autre rôle → 403, y compris l'administrateur sur les dashboards candidat et
+  recruteur).
+- Aucun identifiant dans l'URL ni en paramètre : le candidat et l'entreprise sont déduits du jeton. Un recruteur ne
+  peut donc pas lire les statistiques d'une autre entreprise (vérifié par les tests avec deux recruteurs).
+- Le recruteur ne voit que les scores des candidats ayant postulé à ses offres ; le nom du candidat n'apparaît que
+  dans « meilleurs candidats », comme dans la liste des candidatures déjà accessible. Aucun email, CV ni texte extrait
+  n'est renvoyé.
+- Les prédictions de turnover n'étant pas enregistrées, aucune statistique n'en est tirée. Détails :
+  [dashboards.md](dashboards.md).
+
 ## Mesures de protection
 
 - Mots de passe hachés avec **BCrypt** ; le hash n'est jamais renvoyé par l'API.

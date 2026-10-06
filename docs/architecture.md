@@ -92,6 +92,18 @@ Admin / recruteur → Angular (Risque de turnover, 24 variables) → Spring Boot
 
 Rien n'est enregistré dans MySQL (aucune migration). Dataset, métriques et limites : [ai/turnover-ml.md](ai/turnover-ml.md).
 
+### 2.5 Dashboards
+
+```
+Angular (dashboard du rôle) → GET /api/{candidate|recruiter|admin}/dashboard (périmètre tiré du JWT)
+  → DashboardService → DashboardQueryRepository : requêtes JPQL agrégées (COUNT / AVG / MAX / GROUP BY)
+    sur les tables V1, nombre de requêtes constant (pas de N+1)
+  → DTO de statistiques → cartes KPI + graphiques Chart.js (composant partagé app-chart, chunk paresseux)
+Admin : GET /api/admin/ai/status chargé à part pour l'état du module ML (aucune statistique de prédiction)
+```
+
+Aucune table ni migration supplémentaire. KPI, graphiques et limites : [dashboards.md](dashboards.md).
+
 ## 3. Structure des modules
 
 ### 3.1 Backend Spring Boot (`backend/`)
@@ -128,7 +140,7 @@ Chaque package suit la même structure interne :
 ```
 frontend/src/app/
 ├── core/            # services API, AuthService, intercepteur JWT, guards de rôle, modèles
-├── shared/          # composants réutilisables (loader, alertes, cartes, badge de statut, score)
+├── shared/          # composants réutilisables (loader, alertes, cartes, badge de statut, score, KPI, graphiques)
 ├── layout/          # navbar, sidebar, layouts par rôle
 ├── features/
 │   ├── public/      # accueil, login, register, jobs, jobs/:id

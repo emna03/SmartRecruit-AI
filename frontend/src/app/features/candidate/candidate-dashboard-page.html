@@ -1,88 +1,149 @@
 @if (loading()) {
   <app-loading-spinner />
 } @else if (error()) {
-  <div class="alert alert-danger">{{ error() }}</div>
+  <div class="alert alert-danger" data-testid="dashboard-error">{{ error() }}</div>
 } @else if (profile(); as p) {
-  <h1 class="page-title">Bonjour {{ p.firstName }}</h1>
-  <p class="page-subtitle">Voici un résumé de votre activité.</p>
+  @if (dashboard(); as d) {
+    <h1 class="page-title">Bonjour {{ p.firstName }}</h1>
+    <p class="page-subtitle">Voici un résumé de votre activité, calculé à partir de vos données.</p>
 
-  <div class="row g-3 mb-4">
-    @for (stat of stats(); track stat.label) {
-      <div class="col-6 col-md-4 col-xl">
-        <div class="card stat-card h-100">
-          <div class="card-body">
-            <span class="stat-icon bg-{{ stat.tone }}-subtle text-{{ stat.tone }}-emphasis mb-2"><i aria-hidden="true" class="bi {{ stat.icon }}"></i></span>
-            <div class="stat-value">{{ stat.value }}</div>
-            <div class="stat-label">{{ stat.label }}</div>
+    <nav class="d-flex flex-wrap gap-2 mb-4" aria-label="Accès rapides">
+      @for (link of quickLinks; track link.path) {
+        <a class="btn btn-outline-primary" [routerLink]="link.path" [attr.data-testid]="link.testId"
+          [attr.aria-label]="'Accès rapide : ' + link.label">
+          <i aria-hidden="true" class="bi {{ link.icon }} me-1"></i>{{ link.label }}
+        </a>
+      }
+    </nav>
+
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-xl-3" data-testid="kpi-applications">
+        <app-kpi-card label="Candidatures envoyées" [value]="d.totalApplications" icon="bi-send" link="/candidate/applications" />
+      </div>
+      <div class="col-6 col-xl-3" data-testid="kpi-offers">
+        <app-kpi-card label="Offres disponibles" [value]="d.publishedOffers" icon="bi-broadcast" tone="success"
+          [hint]="d.publishedOffersNotApplied + ' sans candidature de votre part'" link="/candidate/jobs" />
+      </div>
+      <div class="col-6 col-xl-3" data-testid="kpi-cv">
+        <app-kpi-card label="État du CV" [value]="cvStateLabels[d.cv.state]" icon="bi-file-earmark-person" [tone]="cvTone()"
+          [hint]="cvHint()" link="/candidate/cv" />
+      </div>
+      <div class="col-6 col-xl-3" data-testid="kpi-best-score">
+        <app-kpi-card label="Meilleur score de compatibilité" icon="bi-bullseye" tone="info"
+          [value]="d.topMatches.length ? (d.topMatches[0].score | number: '1.0-1') + ' / 100' : '—'"
+          [hint]="d.scoredOffers + ' offre(s) avec un score'" />
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-lg-5">
+        <div class="card h-100">
+          <div class="card-header bg-white section-title">Mes candidatures par statut</div>
+          <div class="card-body" data-testid="chart-applications-status">
+            <app-chart type="doughnut" label="Mes candidatures par statut" [labels]="statusChart().labels"
+              [series]="statusChart().series" emptyText="Vous n'avez pas encore postulé." />
           </div>
         </div>
       </div>
-    }
-  </div>
-
-  <div class="row g-4">
-    <div class="col-lg-7">
-      <div class="card h-100">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-          <span class="section-title">Candidatures récentes</span>
-          <a routerLink="/candidate/applications" class="small">Tout voir</a>
-        </div>
-        @if (applications().length === 0) {
-          <div class="empty-state">
-            <i aria-hidden="true" class="bi bi-send"></i>Vous n'avez pas encore postulé.
-            <div><a class="btn btn-primary btn-sm mt-2" routerLink="/candidate/jobs">Parcourir les offres</a></div>
-          </div>
-        } @else {
-          <ul class="list-group list-group-flush">
-            @for (a of applications().slice(0, 5); track a.id) {
-              <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
-                <div>
-                  <div class="fw-semibold">{{ a.job.title }}</div>
-                  <div class="small text-secondary">{{ a.job.companyName }} · {{ a.appliedAt | date: 'dd/MM/yyyy' }}</div>
-                </div>
-                <app-status-badge [status]="a.status" />
-              </li>
+      <div class="col-lg-7">
+        <div class="card h-100">
+          <div class="card-header bg-white section-title">Mes meilleurs scores de compatibilité</div>
+          <div class="card-body" data-testid="chart-top-matches">
+            <app-chart type="bar" [horizontal]="true" [max]="100" unit=" / 100" label="Meilleurs scores de compatibilité"
+              [labels]="matchChart().labels" [series]="matchChart().series" [height]="220"
+              emptyText="Aucun score : consultez une offre après avoir importé votre CV pour calculer votre compatibilité." />
+            @if (d.topMatches.length) {
+              <ul class="list-unstyled small mt-3 mb-2">
+                @for (m of d.topMatches; track m.jobOfferId) {
+                  <li class="d-flex flex-wrap align-items-center gap-2 mb-1" data-testid="top-match">
+                    <a [routerLink]="['/candidate/jobs', m.jobOfferId]" class="fw-semibold">{{ m.title }}</a>
+                    <span class="text-secondary">{{ m.companyName }}</span>
+                    <span class="badge text-bg-light border">{{ m.score | number: '1.0-1' }} / 100</span>
+                    @if (m.applied) {
+                      <span class="badge text-bg-primary-subtle text-primary-emphasis">Candidature envoyée</span>
+                    }
+                    @if (m.offerStatus !== 'PUBLIEE') {
+                      <span class="badge text-bg-secondary">Offre plus publiée</span>
+                    }
+                    @if (m.stale) {
+                      <span class="badge text-bg-warning" title="Votre CV a changé depuis ce calcul">À recalculer</span>
+                    }
+                  </li>
+                }
+              </ul>
+              <p class="small text-secondary mb-0">
+                Scores indicatifs calculés à partir de votre CV analysé ; ils ne constituent pas une décision de recrutement.
+              </p>
             }
-          </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div class="card h-100">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <span class="section-title">Candidatures récentes</span>
+            <a routerLink="/candidate/applications" class="small">Tout voir</a>
+          </div>
+          @if (applications().length === 0) {
+            <div class="empty-state">
+              <i aria-hidden="true" class="bi bi-send"></i>Vous n'avez pas encore postulé.
+              <div><a class="btn btn-primary btn-sm mt-2" routerLink="/candidate/jobs">Parcourir les offres</a></div>
+            </div>
+          } @else {
+            <ul class="list-group list-group-flush">
+              @for (a of applications().slice(0, 5); track a.id) {
+                <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+                  <div>
+                    <div class="fw-semibold">{{ a.job.title }}</div>
+                    <div class="small text-secondary">{{ a.job.companyName }} · {{ a.appliedAt | date: 'dd/MM/yyyy' }}</div>
+                  </div>
+                  <app-status-badge [status]="a.status" />
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card h-100">
+          <div class="card-header bg-white section-title">Complétude du profil</div>
+          <div class="card-body">
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <div class="progress flex-grow-1" style="height: .6rem" role="progressbar" [attr.aria-valuenow]="completion()" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar" [style.width.%]="completion()"></div>
+              </div>
+              <strong>{{ completion() }} %</strong>
+            </div>
+            <ul class="list-unstyled small mb-3">
+              @for (c of checks(); track c.label) {
+                <li class="mb-1">
+                  <i aria-hidden="true" [class]="c.done ? 'bi bi-check-circle-fill text-success me-2' : 'bi bi-circle text-secondary me-2'"></i>{{ c.label }}
+                </li>
+              }
+            </ul>
+            <div class="d-flex flex-wrap gap-2">
+              <a class="btn btn-outline-primary btn-sm" routerLink="/candidate/profile">Compléter mon profil</a>
+              @if (!p.hasCv) {
+                <a class="btn btn-primary btn-sm" routerLink="/candidate/cv" data-testid="dashboard-import-cv">
+                  <i aria-hidden="true" class="bi bi-file-earmark-arrow-up me-1"></i>Importer mon CV
+                </a>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    @if (latestJobs().length) {
+      <h2 class="h5 fw-bold mt-4 mb-3">Dernières offres publiées</h2>
+      <div class="row g-3">
+        @for (job of latestJobs(); track job.id) {
+          <div class="col-md-6 col-xl-4"><app-job-card [job]="job" detailBase="/candidate/jobs" /></div>
         }
       </div>
-    </div>
-    <div class="col-lg-5">
-      <div class="card h-100">
-        <div class="card-header bg-white section-title">Complétude du profil</div>
-        <div class="card-body">
-          <div class="d-flex align-items-center gap-3 mb-3">
-            <div class="progress flex-grow-1" style="height: .6rem" role="progressbar" [attr.aria-valuenow]="completion()" aria-valuemin="0" aria-valuemax="100">
-              <div class="progress-bar" [style.width.%]="completion()"></div>
-            </div>
-            <strong>{{ completion() }} %</strong>
-          </div>
-          <ul class="list-unstyled small mb-3">
-            @for (c of checks(); track c.label) {
-              <li class="mb-1">
-                <i aria-hidden="true" [class]="c.done ? 'bi bi-check-circle-fill text-success me-2' : 'bi bi-circle text-secondary me-2'"></i>{{ c.label }}
-              </li>
-            }
-          </ul>
-          <div class="d-flex flex-wrap gap-2">
-            <a class="btn btn-outline-primary btn-sm" routerLink="/candidate/profile">Compléter mon profil</a>
-            @if (!p.hasCv) {
-              <a class="btn btn-primary btn-sm" routerLink="/candidate/cv" data-testid="dashboard-import-cv">
-                <i aria-hidden="true" class="bi bi-file-earmark-arrow-up me-1"></i>Importer mon CV
-              </a>
-            }
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  @if (latestJobs().length) {
-    <h2 class="h5 fw-bold mt-4 mb-3">Dernières offres publiées</h2>
-    <div class="row g-3">
-      @for (job of latestJobs(); track job.id) {
-        <div class="col-md-6 col-xl-4"><app-job-card [job]="job" detailBase="/candidate/jobs" /></div>
-      }
-    </div>
+    }
   }
 }

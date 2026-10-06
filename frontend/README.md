@@ -34,7 +34,10 @@ pour le score de compatibilité (CV → offre → score → MySQL → affichage 
 `turnover-flow.e2e.ts` vérifie la prédiction de risque de turnover (recruteur / admin → saisie → Spring Boot → FastAPI →
 modèle ML réel → résultat comparé au rapport `ai-service/ml/reports/turnover_evaluation.json` ; candidat sans accès) :
 il nécessite le modèle entraîné (`python -m ml.train`) et le service IA démarré.
-Il crée des comptes `e2e6-*` à `e2e11-*@test.local` et des entreprises `E2E6 *` à `E2E10 *`, puis les supprime via l'API admin
+`dashboard-flow.e2e.ts` crée des données par l'API (CV analysé, scores, candidatures, changement de statut) puis compare
+les KPI et les valeurs des graphiques des trois dashboards aux requêtes SQL sur MySQL (isolation, accès, mobile ;
+service IA démarré).
+Il crée des comptes `e2e6-*` à `e2e12-*@test.local` et des entreprises `E2E6 *` à `E2E12 *`, puis les supprime via l'API admin
 (identifiants lus dans `../.env`). `E2E_KEEP_DATA=1` conserve les données pour les inspecter dans MySQL.
 Captures d'écran : `e2e/screenshots/` (non versionné).
 
@@ -44,14 +47,14 @@ Captures d'écran : `e2e/screenshots/` (non versionné).
 |---|---|
 | `core/models` | Interfaces TypeScript calquées sur les DTO du backend, libellés français des énumérations |
 | `core/auth` | `AuthService` (session JWT en signals + localStorage), `authInterceptor`, `roleGuard` / `guestGuard` |
-| `core/services` | Un service par domaine d'API : offres, profil candidat, CV, recruteur/entreprise, candidatures, compétences, admin, notifications |
+| `core/services` | Un service par domaine d'API : offres, profil candidat, CV, recruteur/entreprise, candidatures, compétences, admin, dashboards, notifications |
 | `core/http-errors.ts` | Message lisible depuis l'`ApiError` du backend, report des `fieldErrors` sur les formulaires |
-| `shared` | Composants réutilisables : erreurs de champ, chargement, badge de statut, pagination, saisie de compétences, carte d'offre, notifications, validateurs |
+| `shared` | Composants réutilisables : erreurs de champ, chargement, badge de statut, pagination, saisie de compétences, carte d'offre, notifications, validateurs, carte KPI, graphique Chart.js (`app-chart`, avec tableau accessible ; `fake-chart.testing.ts` le remplace dans les tests unitaires) |
 | `layout` | Barre de navigation, pied de page, mise en page des espaces (barre latérale) |
 | `features/public` | Accueil, connexion, inscription, liste et détail des offres, 404 |
 | `features/candidate` | Tableau de bord, profil (infos, compétences, formations, expériences), CV (import PDF, analyse IA, ajout au profil), offres, candidatures |
 | `features/recruiter` | Tableau de bord, entreprise & profil, offres (liste, création, modification), candidats d'une offre, détail d'une candidature |
-| `features/admin` | Espace minimal : statistiques, utilisateurs, entreprises, offres |
+| `features/admin` | Tableau de bord (statistiques globales, graphiques, état du module ML), utilisateurs, entreprises, offres |
 | `features/hr` | Risque de turnover (Machine Learning) : formulaire des 24 variables, score, niveau, facteurs et avertissement ; route `turnover` des espaces recruteur et admin |
 
 ## Sécurité

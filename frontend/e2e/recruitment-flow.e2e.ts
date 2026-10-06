@@ -260,7 +260,7 @@ test('E6 le recruteur consulte le candidat et le présélectionne', async ({ pag
 test('E7 le candidat voit le nouveau statut et ses statistiques', async ({ page }) => {
   await login(page, candidate.email);
   await expect(page).toHaveURL(/\/candidate\/dashboard$/);
-  await expect(page.locator('.stat-card').filter({ hasText: 'Présélectionné' })).toContainText('1');
+  await expect(page.getByTestId('chart-applications-status').getByRole('row', { name: /Présélectionné/ })).toContainText('1');
   await page.screenshot({ path: join(screenshotDir, '08-candidat-dashboard.png'), fullPage: true });
 
   await page.getByRole('link', { name: 'Mes candidatures' }).first().click();

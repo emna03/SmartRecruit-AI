@@ -6,7 +6,7 @@ Application web de recrutement : les entreprises publient des offres, les candid
 et un module d'IA analyse les CV, calcule un score de compatibilité explicable avec les offres
 et répond aux questions via un chatbot RH.
 
-> **État du projet : ÉTAPES 1 (architecture), 2 (MySQL + Spring Boot), 3 (entités JPA), 4 (JWT + rôles), 5 (profils, entreprises, offres, candidatures), 6 (frontend Angular connecté au backend), 7 (socle du service IA FastAPI relié à Spring Boot), 8 (CV Parser + NLP : import d'un CV PDF et extraction automatique des compétences, formations, expériences et langues), 9 (matching CV ↔ offre : score de compatibilité explicable et classement des candidats), 10 (chatbot RH : questions en langage naturel sur les offres publiées et la plateforme) et 11 (Machine Learning : estimation explicable du risque de turnover, modèle entraîné sur le dataset public et fictif IBM HR Analytics) terminées.** Ce README sera complété à l'étape 14.
+> **État du projet : ÉTAPES 1 (architecture), 2 (MySQL + Spring Boot), 3 (entités JPA), 4 (JWT + rôles), 5 (profils, entreprises, offres, candidatures), 6 (frontend Angular connecté au backend), 7 (socle du service IA FastAPI relié à Spring Boot), 8 (CV Parser + NLP : import d'un CV PDF et extraction automatique des compétences, formations, expériences et langues), 9 (matching CV ↔ offre : score de compatibilité explicable et classement des candidats), 10 (chatbot RH : questions en langage naturel sur les offres publiées et la plateforme), 11 (Machine Learning : estimation explicable du risque de turnover, modèle entraîné sur le dataset public et fictif IBM HR Analytics) et 12 (dashboards des trois rôles : KPI et graphiques calculés à partir des données réelles de MySQL) terminées.** Ce README sera complété à l'étape 14.
 
 ## Démarrage rapide (provisoire)
 
@@ -46,6 +46,7 @@ Détails : [docs/architecture.md](docs/architecture.md) — Modèle de données 
 — Module IA Matching (formule, pondérations, exemples, limites, version) : [docs/ai/matching.md](docs/ai/matching.md)
 — Chatbot RH (architecture, NLP, intentions, exemples, sécurité, limites) : [docs/ai/chatbot.md](docs/ai/chatbot.md)
 — Machine Learning, risque de turnover (dataset, modèles comparés, métriques réelles, limites, éthique) : [docs/ai/turnover-ml.md](docs/ai/turnover-ml.md)
+— Dashboards et statistiques (KPI, origine des données, endpoints, autorisations, graphiques, limites) : [docs/dashboards.md](docs/dashboards.md)
 
 ## Arborescence
 
