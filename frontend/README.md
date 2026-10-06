@@ -37,7 +37,11 @@ il nécessite le modèle entraîné (`python -m ml.train`) et le service IA dém
 `dashboard-flow.e2e.ts` crée des données par l'API (CV analysé, scores, candidatures, changement de statut) puis compare
 les KPI et les valeurs des graphiques des trois dashboards aux requêtes SQL sur MySQL (isolation, accès, mobile ;
 service IA démarré).
-Il crée des comptes `e2e6-*` à `e2e12-*@test.local` et des entreprises `E2E6 *` à `E2E12 *`, puis les supprime via l'API admin
+`demo-journey.e2e.ts` rejoue le scénario complet de la soutenance ([docs/demo-guide.md](../docs/demo-guide.md)) dans
+l'ordre : recruteur (inscription, entreprise, offre en brouillon puis publiée) → candidat (profil, CV, analyse, score,
+candidature, Assistant RH) → recruteur (classement, statut) → admin (dashboard, utilisateurs, entreprises, offres) →
+turnover, chaque étape étant comparée à MySQL (service IA démarré et modèle entraîné).
+Il crée des comptes `e2e6-*` à `e2e13-*@test.local` et des entreprises `E2E6 *` à `E2E13 *`, puis les supprime via l'API admin
 (identifiants lus dans `../.env`). `E2E_KEEP_DATA=1` conserve les données pour les inspecter dans MySQL.
 Captures d'écran : `e2e/screenshots/` (non versionné).
 

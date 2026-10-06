@@ -94,6 +94,9 @@ test.afterAll(async ({ request }) => {
   for (const user of users.filter((u: { email: string }) => u.email.startsWith('e2e10-'))) {
     await request.delete(`/api/admin/users/${user.id}`, { headers });
   }
+  // Aucun endpoint ne supprime une compétence du référentiel : la compétence inventée est retirée directement.
+  mysql(`DELETE FROM skills WHERE name = '${skill}' AND NOT EXISTS (SELECT 1 FROM job_offer_skills js WHERE js.skill_id = skills.id)
+    AND NOT EXISTS (SELECT 1 FROM cv_skills cs WHERE cs.skill_id = skills.id) AND NOT EXISTS (SELECT 1 FROM candidate_skills c WHERE c.skill_id = skills.id)`);
 });
 
 test('C1 le candidat cherche des offres par compétence et obtient les vraies offres publiées', async ({ page }) => {

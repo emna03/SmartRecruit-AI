@@ -93,7 +93,7 @@ démarrage à partir de ces exemples.
 - **Règles de priorité** :
   - une question sans intention claire (ou une simple salutation) mais citant une compétence, un contrat ou une
     ville est traitée comme une **recherche d'offres** (« Angular à Tunis ? ») ;
-  - une question non reconnue citant le titre exact d'une offre donne le **détail de cette offre**.
+  - une question non reconnue citant le titre d'une offre (exact ou approché, voir § 2) donne le **détail de cette offre**.
 - À égalité de score, l'ordre alphabétique départage : le résultat est toujours le même.
 
 Pourquoi cette approche plutôt qu'un modèle entraîné ou un LLM : le domaine est fermé (offres + fonctionnement
@@ -157,15 +157,15 @@ Catalogue : « Développeur Java Spring Boot » (Acme, CDI, Tunis, 2 ans, Bac+5)
 | J'ai 2 ans d'expérience et un master, quelles offres en Java ? | SEARCH_OFFERS (0.73) | « J'ai trouvé 1 offre publiée qui demande Java, accessible avec 2 ans d'expérience, accessible avec un niveau Bac+5 … » |
 | Quelles offres demandent Java et Python ? | SEARCH_OFFERS (0.97) | « Aucune offre publiée ne demande à la fois Java et Python. Voici 3 offres qui demandent au moins l'une de ces compétences. » |
 | Je cherche un poste de pilote d'avion | SEARCH_OFFERS (0.45) | « Je n'ai trouvé aucune offre publiée correspondant à « pilote avion ». » |
-| Quelles sont les compétences demandées pour cette offre ? (contexte : offre Java) | OFFER_SKILLS (0.59) | « L'offre « Développeur Java Spring Boot » (Acme) demande 4 compétences : Java, Spring Boot, MySQL et Docker. » |
-| Combien d'années d'expérience sont nécessaires ? J'ai 1 an (même contexte) | OFFER_EXPERIENCE (0.54) | « … demande au moins 2 ans d'expérience. Avec 1 an d'expérience, vous êtes en dessous du minimum demandé : vous pouvez tout de même postuler, c'est le recruteur qui décide. » |
+| Quelles sont les compétences demandées pour cette offre ? (contexte : offre Java) | OFFER_SKILLS (1.0) | « L'offre « Développeur Java Spring Boot » (Acme) demande 4 compétences : Java, Spring Boot, MySQL et Docker. » |
+| Combien d'années d'expérience sont nécessaires ? J'ai 1 an (même contexte) | OFFER_EXPERIENCE (0.9) | « … demande au moins 2 ans d'expérience. Avec 1 an d'expérience, vous êtes en dessous du minimum demandé : vous pouvez tout de même postuler, c'est le recruteur qui décide. » |
 | Quel niveau d'étude est demandé ? J'ai une licence (même contexte) | OFFER_EDUCATION (0.83) | « … demande un niveau Bac+5 (Master / Ingénieur). Un niveau Bac+3 (Licence) est inférieur au niveau demandé … » |
 | Quelles compétences pour l'offre « Astronaute lunaire » ? | OFFER_SKILLS (0.42) | « Je ne trouve aucune offre publiée intitulée « Astronaute lunaire ». » (aucune offre citée) |
 | Quel est le salaire ? (sans contexte) | OFFER_SALARY (1.0) | « De quelle offre parlez-vous ? … » |
 | Comment postuler à une offre ? | FAQ_APPLY (1.0) | procédure + liens « Voir les offres », « Mes candidatures » |
-| Comment fonctionne le score de compatibilité ? | FAQ_MATCHING (0.92) | formule 60 / 25 / 15, « jamais une décision automatique » |
-| Quelle est la recette de la pâte à crêpes ? | UNKNOWN (0.21) | « Je ne sais pas répondre à cette question. … » |
-| Combien coûte un abonnement ? | UNKNOWN (0.35, hors vocabulaire) | idem |
+| Comment fonctionne le score de compatibilité ? | FAQ_MATCHING (1.0) | formule 60 / 25 / 15, « jamais une décision automatique » |
+| Quelle est la recette de la pâte à crêpes ? | UNKNOWN (0.19) | « Je ne sais pas répondre à cette question. … » |
+| Combien coûte un abonnement ? | UNKNOWN (0.32, hors vocabulaire) | idem |
 
 Sous chaque réponse, l'interface affiche ce que l'assistant a compris (« Compris : Java · Stage · Tunis »).
 
@@ -238,7 +238,7 @@ transmettre la question brute, après accord de l'équipe et avec les garde-fous
 
 | Niveau | Fichier | Ce qui est vérifié |
 |---|---|---|
-| FastAPI | `tests/test_chatbot_nlp.py` (12) | compétences et alias, élision ≠ langage C, années, niveaux, contrats, villes issues des offres, titres exacts et approchés, titre inexistant, mots-clés |
+| FastAPI | `tests/test_chatbot_nlp.py` (12, paramétrés : 25 cas) | compétences et alias, élision ≠ langage C, années, niveaux, contrats, villes issues des offres, titres exacts et approchés, titre inexistant, mots-clés |
 | FastAPI | `tests/test_chatbot_intents.py` (4, paramétrés) | intentions reconnues, questions hors domaine refusées, déterminisme |
 | FastAPI | `tests/test_chatbot_engine.py` (19) | recherche par compétence / contrat / ville / expérience / niveau, résultats partiels annoncés, aucune offre inventée (technologie inconnue, catalogue vide, titre inexistant), compétences / expérience / formation / salaire d'une offre, FAQ, `UNKNOWN`, même question = même réponse |
 | FastAPI | `tests/test_chatbot_route.py` (8) | clé interne obligatoire, JSON camelCase, question vide / trop longue, offre de contexte hors catalogue, doublons, champ personnel refusé, journaux sans la question |

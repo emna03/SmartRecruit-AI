@@ -87,7 +87,7 @@ Toutes les erreurs ont le même format JSON :
 - Upload réservé au rôle `CANDIDAT`, sur son propre CV uniquement (pas d'identifiant de CV dans l'URL).
 - **Aucune confiance dans le navigateur** : le nom et le type MIME envoyés sont ignorés ; le fichier doit être
   non vide, ≤ `MAX_CV_SIZE_MB` et commencer par la signature `%PDF-`. Il est stocké sous un nom aléatoire
-  (`<uuid>.pdf`) dans `UPLOAD_DIR/cvs` (ignoré par Git), hors de toute URL publique ; le nom d'origine,
+  (32 caractères hexadécimaux + `.pdf`) dans `UPLOAD_DIR/cvs` (ignoré par Git), hors de toute URL publique ; le nom d'origine,
   nettoyé (chemins et caractères spéciaux retirés), sert seulement à l'affichage.
 - Le CV n'est transmis qu'au service IA interne (clé `X-Internal-Api-Key`), jamais à un LLM ni à un tiers.
 - Le résultat du parser est validé par Pydantic puis par Bean Validation avant tout enregistrement ;
@@ -165,3 +165,23 @@ Toutes les erreurs ont le même format JSON :
 - `AuthApiTest` : inscription, connexion, rôles, désactivation, suppression, CORS (15 scénarios).
 - `scripts/e2e-auth.ps1` : scénario complet sur le backend lancé avec MySQL
   (`powershell -ExecutionPolicy Bypass -File scripts/e2e-auth.ps1 -BaseUrl http://localhost:8080`).
+
+## Audit de sécurité final (étape 13)
+
+`scripts/e2e-step13.ps1` rejoue en une fois les contrôles transverses sur l'application réellement démarrée
+(backend et MySQL démarrés, service IA arrêté : le script le lance puis l'arrête lui-même) :
+
+| Domaine | Vérifications |
+|---|---|
+| JWT | en-tête HS*, aucun mot de passe ni nom dans la charge utile ; sans jeton, jeton mal formé, signé avec une autre clé, `alg: none`, charge utile modifiée (rôle ADMIN) → 401 ; jeton d'un compte supprimé → 401 |
+| Rôles | inscription en ADMIN → 400 ; candidat sur les API recruteur / admin / RH, recruteur sur les API candidat / admin, admin sur les API candidat / recruteur → 403 |
+| Ownership | un recruteur sur l'offre, les candidatures, le changement de statut ou le recalcul des scores d'une autre entreprise → 404 (MySQL inchangé) ; candidature d'un tiers → 404 ; brouillon invisible (404, absent de la recherche) |
+| Entrées | champs invalides → 400 avec `fieldErrors` ; email en double (casse différente), candidature en double → 409 ; salaire incohérent, énumération inconnue, identifiant non numérique, question vide ou > 500 caractères → 400 ; aucune trace technique dans les erreurs |
+| Upload PDF | nom `..\..\..\evil.pdf` → stockage sous un nom aléatoire dans `uploads/cvs` ; recruteur → 403 ; vraie image PNG ou texte renommé `.pdf` → 400 ; type de contenu non pris en charge → 415 ; 6 Mo → 413 ; PDF endommagé → 422 |
+| Clé interne | `/health` public sans détail sensible ; `/api/status` sans clé ou avec une mauvaise clé → 401 ; FastAPI n'écoute que sur 127.0.0.1 ; MySQL publié sur 127.0.0.1 uniquement |
+| CORS | origine Angular autorisée ; origine inconnue refusée sans en-tête `Access-Control-Allow-Origin` |
+| Panne IA | chatbot, recalcul des scores, statut IA → 503 lisible ; offres, candidatures et dashboards restent disponibles |
+| Journaux | ni email (aucune adresse, quel que soit le compte), ni contenu du CV, ni lettre de motivation, ni mot de passe, ni jeton, ni secret |
+| Git | aucune valeur secrète de `.env` dans tout l'historique (`git log -p --all`) ; `.env` ignoré et jamais commité ; uploads, modèle et dataset ignorés ; aucune clé privée ni jeton JWT commité |
+
+Les comptes, entreprises et fichiers créés sont supprimés à la fin (vérifié dans MySQL et sur le disque).

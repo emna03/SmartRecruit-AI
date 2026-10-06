@@ -12,8 +12,10 @@ formulaire 24 variables ──► POST /api/hr/turnover/predictions ──► PO
         └──────── score, niveau, 5 facteurs ◄── réponse IA validée ◄──────────── probabilité + facteurs
 ```
 
-Toutes les valeurs numériques citées ci-dessous proviennent du rapport généré par l'entraînement,
-`ai-service/ml/reports/turnover_evaluation.json` (versionné). Aucune n'a été saisie à la main.
+Toutes les métriques citées ci-dessous proviennent du rapport généré par l'entraînement,
+`ai-service/ml/reports/turnover_evaluation.json` (versionné). L'exemple de réponse du § 9 est la sortie réelle du
+modèle pour la ligne 690 (enregistrée aussi dans `backend/src/test/resources/turnover/high-risk-prediction.json`).
+Aucune valeur n'a été saisie à la main.
 
 ## 1. Objectif
 

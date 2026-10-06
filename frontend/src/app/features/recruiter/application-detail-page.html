@@ -36,7 +36,7 @@
             <div class="col-sm-6"><i aria-hidden="true" class="bi bi-telephone me-2 text-primary"></i>{{ a.candidate.phone || '—' }}</div>
             <div class="col-sm-6"><i aria-hidden="true" class="bi bi-geo-alt me-2 text-primary"></i>{{ a.candidate.location || '—' }}</div>
             <div class="col-sm-6"><i aria-hidden="true" class="bi bi-mortarboard me-2 text-primary"></i>{{ a.candidate.educationLevel | label: 'education' }}</div>
-            <div class="col-sm-6"><i aria-hidden="true" class="bi bi-briefcase me-2 text-primary"></i>{{ a.candidate.yearsOfExperience ?? 0 }} an(s) d'expérience</div>
+            <div class="col-sm-6"><i aria-hidden="true" class="bi bi-briefcase me-2 text-primary"></i>{{ a.candidate.yearsOfExperience === null ? 'Expérience non renseignée' : a.candidate.yearsOfExperience + " an(s) d'expérience" }}</div>
           </div>
           @if (a.candidate.summary) {
             <h2 class="section-title">Résumé</h2>

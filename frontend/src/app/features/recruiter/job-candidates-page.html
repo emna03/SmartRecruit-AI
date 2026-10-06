@@ -84,7 +84,8 @@
                     }
                   </div>
                   <div class="small text-secondary mt-1">
-                    {{ a.candidate.yearsOfExperience ?? 0 }} an(s) d'expérience · {{ a.candidate.educationLevel | label: 'education' }}
+                    <span data-testid="candidate-experience">{{ a.candidate.yearsOfExperience === null ? 'Expérience non renseignée' : a.candidate.yearsOfExperience + " an(s) d'expérience" }}</span>
+                    · {{ a.candidate.educationLevel | label: 'education' }}
                     · postulé le {{ a.appliedAt | date: 'dd/MM/yyyy' }}
                   </div>
                 </div>

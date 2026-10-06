@@ -194,9 +194,13 @@ try {
     foreach ($u in $users.Values) { if ($u.Id) { Invoke-Api DELETE "/api/admin/users/$($u.Id)" -Token $adminToken | Out-Null } }
     foreach ($id in $offers) { Invoke-Api DELETE "/api/admin/jobs/$id" -Token $adminToken | Out-Null }
     if ($companyId) { Invoke-Api DELETE "/api/admin/companies/$companyId" -Token $adminToken | Out-Null }
+    # Aucun endpoint ne supprime une compétence du référentiel : la compétence inventée est retirée directement.
+    Invoke-Sql ("DELETE FROM skills WHERE name = '$skill' AND NOT EXISTS (SELECT 1 FROM job_offer_skills js WHERE js.skill_id = skills.id) " +
+        "AND NOT EXISTS (SELECT 1 FROM cv_skills cs WHERE cs.skill_id = skills.id) AND NOT EXISTS (SELECT 1 FROM candidate_skills c WHERE c.skill_id = skills.id)") | Out-Null
     $left = (Invoke-Sql "SELECT COUNT(*) FROM job_offers WHERE title LIKE '%$suffix'")[0][0]
     $leftCompany = (Invoke-Sql "SELECT COUNT(*) FROM companies WHERE name = 'E2E10 Corp $suffix'")[0][0]
-    Assert-Check "Offres et entreprise de test supprimées de MySQL" ($left -eq "0" -and $leftCompany -eq "0")
+    $leftSkill = (Invoke-Sql "SELECT COUNT(*) FROM skills WHERE name = '$skill'")[0][0]
+    Assert-Check "Offres, entreprise et compétence inventée supprimées de MySQL" ($left -eq "0" -and $leftCompany -eq "0" -and $leftSkill -eq "0")
 }
 
 Write-Summary

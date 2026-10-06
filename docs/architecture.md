@@ -3,26 +3,32 @@
 ## 1. Vue d'ensemble
 
 ```
-┌──────────────────────────┐
-│  Frontend Angular :4200  │   Navigateur (candidat / recruteur / admin)
-└────────────┬─────────────┘
-             │ REST JSON + JWT (Authorization: Bearer ...)
-             v
-┌──────────────────────────┐        ┌──────────────────┐
-│ Backend Spring Boot :8080│───────>│  MySQL :3306     │
-│  (API principale,        │  JPA   │  base smartrecruit│
-│   sécurité, métier)      │        └──────────────────┘
-└────────────┬─────────────┘
-             │ REST interne + header X-Internal-Api-Key
-             v
-┌──────────────────────────┐
-│ Service IA FastAPI :8000 │
-│  ├─ cv_parser   (PDF → texte → NLP → JSON)
-│  ├─ matching    (CV ↔ offre → score 0-100 explicable)
-│  ├─ chatbot     (intentions + offres publiées, NLP local)
-│  └─ ml          (risque de turnover : modèle scikit-learn entraîné hors ligne)
-└──────────────────────────┘
+                 ┌──────────────────────────────────────┐
+                 │ Utilisateur (navigateur)             │
+                 │ candidat / recruteur / admin         │
+                 └──────────────────┬───────────────────┘
+                                    ↓  HTTP
+                 ┌──────────────────────────────────────┐
+                 │ Frontend Angular :4200               │
+                 │ Bootstrap, Chart.js, guards de rôle  │
+                 └──────────────────┬───────────────────┘
+                                    ↓  REST JSON + JWT (Authorization: Bearer ...)
+┌──────────────────────────────────────┐  REST interne    ┌─────────────────────────────────────────┐
+│ Backend Spring Boot :8080            │  X-Internal-     │ Service IA FastAPI 127.0.0.1:8000       │
+│ API principale : sécurité JWT,       │ ───Api-Key────>  │ sans état, sans accès à MySQL           │
+│ rôles, ownership, métier, validation │ <──JSON validé── │  ├─ CV Parser / NLP (PDF → JSON)         │
+│ des réponses IA                      │                  │  ├─ Matching (CV ↔ offre, score 0-100)   │
+└──────────────────┬───────────────────┘                  │  ├─ Chatbot « Assistant RH » (NLP local) │
+                   ↓  JPA / Flyway                        │  └─ Machine Learning turnover            │
+┌──────────────────────────────────────┐                  │     (modèle scikit-learn hors ligne)    │
+│ MySQL 8.4 :3306 (Docker)             │                  └─────────────────────────────────────────┘
+│ base smartrecruit, 15 tables (V1)    │
+└──────────────────────────────────────┘
 ```
+
+Lecture : l'utilisateur ne parle qu'à Angular, Angular ne parle qu'à Spring Boot, et Spring Boot est le seul à
+accéder à MySQL et au service IA FastAPI (aller : données minimales ; retour : JSON vérifié avant enregistrement ou
+affichage).
 
 ### Règles d'architecture
 
@@ -34,8 +40,10 @@
 4. **Appels internes protégés** par une clé partagée (`AI_INTERNAL_API_KEY`), FastAPI n'est pas exposé publiquement.
 5. **Les réponses IA sont validées** deux fois : schémas Pydantic côté FastAPI, DTO + validation côté Spring Boot
    avant persistance / affichage.
-6. **Résilience** : si FastAPI est indisponible (timeout, erreur), Spring Boot renvoie une erreur claire
-   (HTTP 503) sans bloquer le reste de l'application.
+6. **Résilience** : si FastAPI est indisponible (timeout, erreur), Spring Boot répond clairement sans bloquer le
+   reste de l'application : 503 pour le chatbot, le turnover et le recalcul des scores côté recruteur ; CV enregistré
+   avec le statut `ECHEC` (analyse relançable) ; matching candidat avec le statut `IA_INDISPONIBLE` et le dernier
+   score enregistré.
 
 ## 2. Flux principaux
 
@@ -43,12 +51,14 @@
 
 ```
 Candidat ──PDF──> Angular ──multipart──> Spring Boot
-                                          │ 1. vérifie JWT (rôle CANDIDAT), type MIME, taille
-                                          │ 2. stocke le fichier dans UPLOAD_DIR (hors Git)
+                                          │ 1. vérifie JWT (rôle CANDIDAT), taille, signature %PDF- du contenu
+                                          │    (le type MIME et l'extension déclarés sont ignorés)
+                                          │ 2. stocke le fichier dans UPLOAD_DIR/cvs (hors Git)
                                           │ 3. envoie le PDF à FastAPI /api/cv/parse
                                           v
                                        FastAPI: extraction texte → nettoyage → NLP
-                                          │ renvoie {skills, education, experience, languages}
+                                          │ renvoie {technologies, skills, educations, experiences, languages,
+                                          │          totalExperienceMonths, highestEducationLevel, warnings…}
                                           v
                                        Spring Boot valide puis enregistre dans CV + Skill
 ```
@@ -86,7 +96,7 @@ Hors ligne : python -m ml.download_dataset (IBM HR Analytics, fictif, SHA-256 v�
 
 Admin / recruteur → Angular (Risque de turnover, 24 variables) → Spring Boot POST /api/hr/turnover/predictions
   → validation stricte, seules les 24 variables sont transmises (aucune identité, ni âge, genre, situation familiale)
-  → FastAPI /api/ml/turnover/predict : modèle chargé au démarrage → score, niveau, 5 facteurs (occlusion)
+  → FastAPI /api/ml/turnover/predict : modèle chargé au démarrage → score, niveau, au plus 5 facteurs (occlusion)
   → Spring Boot valide la réponse → Angular (avec l'avertissement « estimation… ne doit pas être utilisée seule »)
 ```
 
@@ -147,8 +157,7 @@ frontend/src/app/
 │   ├── candidate/   # dashboard, profile, cv, jobs, applications, chatbot (Assistant RH)
 │   ├── recruiter/   # dashboard, company, jobs, jobs/create, jobs/:id/candidates
 │   ├── admin/       # dashboard, users, companies, jobs
-│   ├── hr/          # risque de turnover (ML), partagé par les espaces admin et recruteur
-│   └── chatbot/     # widget de chat
+│   └── hr/          # risque de turnover (ML), partagé par les espaces admin et recruteur
 └── app.routes.ts
 ```
 
@@ -182,9 +191,12 @@ validation des réponses) et `config/AiServiceConfig` le client HTTP. Détails :
 | Service      | Port | Configuration                          |
 |--------------|------|----------------------------------------|
 | Angular      | 4200 | `frontend/src/environments/`           |
-| Spring Boot  | 8080 | `backend/src/main/resources/application.yml` + variables d'environnement |
-| FastAPI      | 8000 | `.env` racine (ou `ai-service/.env`), écoute sur 127.0.0.1 |
-| MySQL        | 3306 | `.env` (jamais commité)                |
+| Spring Boot  | 8080 | `backend/src/main/resources/application.yml` + variables d'environnement (`SERVER_PORT`) |
+| FastAPI      | 8000 | `.env` racine (ou `ai-service/.env`), écoute sur 127.0.0.1 (port tiré de `AI_SERVICE_URL`) |
+| MySQL        | 3306 | `.env` (jamais commité), publié sur 127.0.0.1 uniquement (`DB_PORT`) |
+
+Ce sont les ports par défaut : si l'un d'eux est déjà occupé, il suffit de changer `SERVER_PORT` ou `DB_PORT` dans
+`.env` (le proxy Angular lit `SERVER_PORT`, la configuration Spring Boot lit `DB_PORT`).
 
 Toutes les valeurs sensibles sont lues depuis des variables d'environnement. Le modèle est dans `.env.example`.
 
@@ -195,7 +207,7 @@ Toutes les valeurs sensibles sont lues depuis des variables d'environnement. Le 
 | Frontend       | Angular + TypeScript + Bootstrap        | imposé ; Bootstrap simple et responsive |
 | Backend        | Spring Boot 4.1, Java 21, Maven Wrapper | imposé ; Java 21 déjà installé, wrapper = pas besoin d'installer Maven |
 | Sécurité       | Spring Security + JWT stateless         | séparation front/back, gestion des rôles |
-| Base           | MySQL (compatible MariaDB XAMPP)        | imposé ; schéma géré par scripts de migration |
-| IA             | Python 3.13 + FastAPI, environnement virtuel `ai-service/.venv` | écosystème NLP/ML (pdfplumber, spaCy/regex, scikit-learn) |
+| Base           | MySQL 8.4 dans Docker (`docker-compose.yml`) | imposé ; schéma géré par Flyway (migration V1, jamais modifiée) |
+| IA             | Python 3.13 + FastAPI, environnement virtuel `ai-service/.venv` | écosystème NLP/ML (pdfplumber, expressions régulières, rapidfuzz, scikit-learn) ; pas de spaCy ni de LLM |
 | Matching       | score pondéré explicable                | chaque point du score est justifiable (voir `docs/ai/`) |
 | Chatbot        | NLP local (entités + intentions TF-IDF) + base de connaissances, sans LLM | réponses fondées sur les vraies offres, sans clé API ni envoi de données à un tiers (voir `docs/ai/chatbot.md`) |

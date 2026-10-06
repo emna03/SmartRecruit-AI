@@ -229,3 +229,6 @@ appel depuis MySQL ; aucun paramètre : le périmètre vient du jeton (paramètr
 - Dashboards : `DashboardApiTest` (8), `DashboardQueryCountTest` (1) ; `scripts/e2e-step12.ps1` : chaque chiffre des
   trois dashboards comparé à une requête SQL sur MySQL, avant/après candidatures et changements de statut, isolation
   entre recruteurs, accès (102 vérifications, service IA arrêté au départ).
+- Finalisation (étape 13) : `scripts/e2e-step13.ps1`, audit de sécurité transverse sur l'application démarrée (46
+  vérifications, voir [security.md](security.md#audit-de-sécurité-final-étape-13)) ; `frontend/e2e/demo-journey.e2e.ts`
+  (5 tests Playwright), scénario complet de la démonstration par l'interface, vérifié dans MySQL.

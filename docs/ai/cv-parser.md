@@ -122,7 +122,7 @@ Spring Boot (`com.smartrecruit.cv`) :
   par l'utilisateur du jeton : aucun identifiant de CV dans l'URL) ;
 - validation sans faire confiance au navigateur : fichier non vide, ≤ `MAX_CV_SIZE_MB` (5 Mo), **signature
   `%PDF-` lue dans le contenu** ; le type MIME et le nom envoyés sont ignorés : `content_type` vaut toujours
-  `application/pdf`, le fichier est stocké sous un nom aléatoire (`<uuid>.pdf`) dans `UPLOAD_DIR/cvs`, le nom
+  `application/pdf`, le fichier est stocké sous un nom aléatoire (32 caractères hexadécimaux + `.pdf`) dans `UPLOAD_DIR/cvs`, le nom
   d'origine est seulement affiché après nettoyage (chemins et caractères spéciaux retirés) ;
 - enregistrement **sans nouvelle migration** (le schéma V1 suffit) :
 
@@ -208,7 +208,7 @@ comportement attendu, pas la performance sur des CV réels variés, qui sera inf
 
 ## Tests
 
-- FastAPI (`ai-service/tests/test_cv_*.py`, 119 tests au total) : nettoyage, dates, sections, lexique, formations,
+- FastAPI (`ai-service/tests/test_cv_*.py`, 85 tests au total) : nettoyage, dates, sections, lexique, formations,
   expériences, langues, pipeline complet sur la vérité terrain, déterminisme, masquage, tous les rejets,
   route HTTP (clé, 413 y compris en flux, 415, 422, aucun contenu de CV dans les journaux).
 - Spring Boot : `CandidateCvApiTest` (12 scénarios avec un faux service IA : MIME et nom ignorés, sécurité,

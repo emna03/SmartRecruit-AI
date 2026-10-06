@@ -110,6 +110,15 @@ describe('JobCandidatesPage — classement par score', () => {
     expect(el.querySelector('[data-testid=refresh-scores]')?.textContent).toContain('Recalculer les scores');
   });
 
+  it('does not present a missing number of years of experience as zero', async () => {
+    const filled = application(2, 'Bob', null);
+    filled.candidate.yearsOfExperience = 0;
+    const { el } = await open([application(1, 'Alice', null), filled]);
+
+    const experience = Array.from(el.querySelectorAll('[data-testid=candidate-experience]')).map((e) => e.textContent?.trim());
+    expect(experience).toEqual(['Expérience non renseignée', "0 an(s) d'expérience"]);
+  });
+
   it('keeps the list when the AI service is unavailable', async () => {
     const { fixture, cards } = await open([application(1, 'Alice', matchingResult({ score: 60 }))]);
 
