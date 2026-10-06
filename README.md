@@ -6,7 +6,7 @@ Application web de recrutement : les entreprises publient des offres, les candid
 et un module d'IA analyse les CV, calcule un score de compatibilité explicable avec les offres
 et répond aux questions via un chatbot RH.
 
-> **État du projet : ÉTAPES 1 (architecture) et 2 (MySQL + Spring Boot) terminées.** Ce README sera complété à l'étape 14.
+> **État du projet : ÉTAPES 1 (architecture), 2 (MySQL + Spring Boot) et 3 (entités JPA) terminées.** Ce README sera complété à l'étape 14.
 
 ## Démarrage rapide (provisoire)
 
@@ -29,7 +29,7 @@ Angular (4200) ──REST/JWT──> Spring Boot (8080) ──> MySQL (3306)
                                                        └─ Chatbot
 ```
 
-Détails : [docs/architecture.md](docs/architecture.md)
+Détails : [docs/architecture.md](docs/architecture.md) — Modèle de données : [docs/database.md](docs/database.md)
 
 ## Arborescence
 

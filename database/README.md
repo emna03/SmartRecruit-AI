@@ -31,6 +31,15 @@ V1__xxx.sql, V2__xxx.sql, ...
 Règles : un nouveau fichier par changement, numéro croissant, ne jamais modifier un script déjà mergé.
 Hibernate est en mode `validate` : il ne modifie jamais le schéma.
 
+Modèle de données détaillé (diagramme, règles d'intégrité) : `docs/database.md`.
+
+## Scripts de vérification
+
+- `tests/verify_schema.sql` : liste les tables, clés étrangères, contraintes d'unicité et CHECK.
+- `tests/verify_constraints.sql` : teste les contraintes et les cascades dans une transaction annulée.
+
+Commandes : voir `docs/database.md`.
+
 ## Données de démonstration
 
 Le dossier `seed/` contiendra les données fictives de démonstration (comptes, entreprises, offres).
