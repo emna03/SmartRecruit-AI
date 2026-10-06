@@ -9,3 +9,9 @@ spring:
       ddl-auto: create-drop
   flyway:
     enabled: false
+
+app:
+  jwt:
+    # Valeur réservée aux tests automatisés, sans usage réel.
+    secret: test-only-secret-key-for-unit-tests-0123456789abcdef
+    expiration-ms: 3600000

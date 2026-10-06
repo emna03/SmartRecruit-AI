@@ -19,3 +19,7 @@ trim_trailing_whitespace = false
 
 [*.{bat,cmd,ps1}]
 end_of_line = crlf
+
+# Windows PowerShell 5.1 a besoin du BOM pour lire correctement les accents
+[*.ps1]
+charset = utf-8-bom

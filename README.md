@@ -6,7 +6,7 @@ Application web de recrutement : les entreprises publient des offres, les candid
 et un module d'IA analyse les CV, calcule un score de compatibilité explicable avec les offres
 et répond aux questions via un chatbot RH.
 
-> **État du projet : ÉTAPES 1 (architecture), 2 (MySQL + Spring Boot) et 3 (entités JPA) terminées.** Ce README sera complété à l'étape 14.
+> **État du projet : ÉTAPES 1 (architecture), 2 (MySQL + Spring Boot), 3 (entités JPA) et 4 (JWT + rôles) terminées.** Ce README sera complété à l'étape 14.
 
 ## Démarrage rapide (provisoire)
 
@@ -30,6 +30,7 @@ Angular (4200) ──REST/JWT──> Spring Boot (8080) ──> MySQL (3306)
 ```
 
 Détails : [docs/architecture.md](docs/architecture.md) — Modèle de données : [docs/database.md](docs/database.md)
+— Sécurité et endpoints d'authentification : [docs/security.md](docs/security.md)
 
 ## Arborescence
 
@@ -41,6 +42,7 @@ smartrecruit-ai/
 │   └── ml/         Entraînement ML hors ligne (datasets et modèles non versionnés)
 ├── database/       Documentation MySQL et données de démonstration (migrations : Flyway dans backend/)
 ├── docs/           Architecture, workflow Git, répartition, documentation IA
+├── scripts/        Scripts de test de bout en bout
 ├── .github/        Modèle de Pull Request
 └── .env.example    Modèle des variables d'environnement
 ```

@@ -45,6 +45,14 @@ management:
         include: health,info
 
 app:
+  jwt:
+    # Aucune valeur par défaut : l'application refuse de démarrer sans JWT_SECRET (>= 32 caractères).
+    secret: ${JWT_SECRET}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  admin:
+    # Compte administrateur créé au démarrage s'il n'existe aucun admin (laisser vide pour ne rien créer).
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
   upload-dir: ${UPLOAD_DIR:./uploads}
