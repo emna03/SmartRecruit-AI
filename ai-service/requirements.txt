@@ -1,0 +1,6 @@
+# Dépendances d'exécution du service IA (Python 3.12+ ; testé avec Python 3.13).
+# Installer dans l'environnement virtuel : pip install -r requirements.txt
+fastapi==0.142.2
+uvicorn[standard]==0.54.0
+pydantic==2.13.5
+pydantic-settings==2.15.0

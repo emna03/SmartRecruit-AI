@@ -9,12 +9,13 @@ function Get-EnvValue([string]$key) {
     return ($line -split '=', 2)[1]
 }
 
-function Invoke-Api([string]$Method, [string]$Path, $Body = $null, [string]$Token = $null) {
+# $Path relatif à $BaseUrl, ou URL absolue (ex. appel direct au service IA) ; $Headers : en-têtes supplémentaires.
+function Invoke-Api([string]$Method, [string]$Path, $Body = $null, [string]$Token = $null, [hashtable]$Headers = @{}) {
     $params = @{
         UseBasicParsing = $true
         Method          = $Method
-        Uri             = "$BaseUrl$Path"
-        Headers         = @{}
+        Uri             = $(if ($Path -match '^https?://') { $Path } else { "$BaseUrl$Path" })
+        Headers         = $Headers.Clone()
         ContentType     = "application/json; charset=utf-8"
     }
     if ($Token) { $params.Headers.Authorization = "Bearer $Token" }
@@ -30,7 +31,10 @@ function Invoke-Api([string]$Method, [string]$Path, $Body = $null, [string]$Toke
         $errorResponse = $_.Exception.Response
         if (-not $errorResponse) { throw }
         $code = [int]$errorResponse.StatusCode
-        $text = (New-Object IO.StreamReader($errorResponse.GetResponseStream(), [Text.Encoding]::UTF8)).ReadToEnd()
+        $stream = $errorResponse.GetResponseStream()
+        # PowerShell 5.1 a déjà lu le corps quand la réponse ne précise pas de charset : revenir au début.
+        if ($stream.CanSeek) { $stream.Position = 0 }
+        $text = (New-Object IO.StreamReader($stream, [Text.Encoding]::UTF8)).ReadToEnd()
     }
     $json = $null
     if ($text) { $json = $text | ConvertFrom-Json }

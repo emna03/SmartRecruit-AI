@@ -103,6 +103,7 @@ Le candidat voit immédiatement le nouveau statut. Le score de matching sera ajo
 | GET | `/api/admin/jobs?status=PUBLIEE` | toutes les offres (filtre optionnel) |
 | PATCH | `/api/admin/jobs/{id}/status` | modération (ex. fermer une offre) |
 | DELETE | `/api/admin/jobs/{id}` | suppression |
+| GET | `/api/admin/ai/status` | état du service IA vu par Spring Boot : `{status, service, version, modules, responseTimeMs}` ; 503 si le service IA ne répond pas (voir [security.md](security.md#communication-interne-spring-boot--fastapi)) |
 
 ## Tests
 

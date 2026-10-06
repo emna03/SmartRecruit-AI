@@ -1,0 +1,10 @@
+[project]
+name = "smartrecruit-ai-service"
+version = "0.1.0"
+description = "Service IA de SmartRecruit AI (FastAPI), appelé uniquement par le backend Spring Boot"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra"

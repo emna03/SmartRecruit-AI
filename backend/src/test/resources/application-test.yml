@@ -15,3 +15,8 @@ app:
     # Valeur réservée aux tests automatisés, sans usage réel.
     secret: test-only-secret-key-for-unit-tests-0123456789abcdef
     expiration-ms: 3600000
+  ai-service:
+    # Port 9 (discard) : aucun service IA réel n'est appelé par les tests ; les tests du client utilisent un serveur simulé.
+    url: http://127.0.0.1:9
+    api-key: test-only-internal-key-0123456789
+    timeout-seconds: 2

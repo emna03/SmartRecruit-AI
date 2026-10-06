@@ -126,19 +126,25 @@ frontend/src/app/
 ```
 ai-service/
 ├── app/
-│   ├── main.py
-│   ├── core/          # configuration (.env), sécurité clé interne, gestion d'erreurs
-│   ├── api/routes/    # health, cv, matching, chatbot, ml
+│   ├── __main__.py    # lancement : python -m app
+│   ├── main.py        # create_app() : configuration, erreurs, journalisation, routes
+│   ├── core/          # config.py (.env), security.py (clé interne), errors.py, logs.py
+│   ├── api/
+│   │   ├── router.py  # /health public ; /api/** protégé par la clé interne
+│   │   └── routes/    # health, status (+ cv, matching, chatbot, ml)
 │   ├── schemas/       # modèles Pydantic d'entrée/sortie (validation)
 │   ├── services/
-│   │   ├── cv_parser/ # extraction PDF, nettoyage, extraction NLP       (P3)
-│   │   ├── matching/  # calcul du score explicable                      (P4)
-│   │   ├── chatbot/   # intentions, base de connaissances, client LLM   (P5)
-│   │   └── ml/        # chargement du modèle et prédiction              (P5)
-│   └── resources/     # référentiel de compétences, synonymes, FAQ
+│   │   ├── cv_parser/ # extraction PDF, nettoyage, extraction NLP       (P3, étape 8)
+│   │   ├── matching/  # calcul du score explicable                      (P4, étape 9)
+│   │   ├── chatbot/   # intentions, base de connaissances, client LLM   (P5, étape 10)
+│   │   └── ml/        # chargement du modèle et prédiction              (P5, étape 11)
+│   └── resources/     # référentiel de compétences, synonymes, FAQ      (à partir de l'étape 8)
 ├── ml/                # entraînement hors ligne : data/ (ignoré), artifacts/ (ignoré), train.py
-└── tests/
+└── tests/             # pytest
 ```
+
+Côté Spring Boot, le package `ai/` contient `AiServiceClient` (clé interne, délais, traduction des erreurs en 503/422,
+validation des réponses) et `config/AiServiceConfig` le client HTTP. Détails : [security.md](security.md#communication-interne-spring-boot--fastapi).
 
 ## 4. Ports et configuration
 
@@ -146,7 +152,7 @@ ai-service/
 |--------------|------|----------------------------------------|
 | Angular      | 4200 | `frontend/src/environments/`           |
 | Spring Boot  | 8080 | `backend/src/main/resources/application.yml` + variables d'environnement |
-| FastAPI      | 8000 | `ai-service/.env`                      |
+| FastAPI      | 8000 | `.env` racine (ou `ai-service/.env`), écoute sur 127.0.0.1 |
 | MySQL        | 3306 | `.env` (jamais commité)                |
 
 Toutes les valeurs sensibles sont lues depuis des variables d'environnement. Le modèle est dans `.env.example`.
@@ -159,6 +165,6 @@ Toutes les valeurs sensibles sont lues depuis des variables d'environnement. Le 
 | Backend        | Spring Boot 4.1, Java 21, Maven Wrapper | imposé ; Java 21 déjà installé, wrapper = pas besoin d'installer Maven |
 | Sécurité       | Spring Security + JWT stateless         | séparation front/back, gestion des rôles |
 | Base           | MySQL (compatible MariaDB XAMPP)        | imposé ; schéma géré par scripts de migration |
-| IA             | Python + FastAPI                        | écosystème NLP/ML (pdfplumber, spaCy/regex, scikit-learn) |
+| IA             | Python 3.13 + FastAPI, environnement virtuel `ai-service/.venv` | écosystème NLP/ML (pdfplumber, spaCy/regex, scikit-learn) |
 | Matching       | score pondéré explicable                | chaque point du score est justifiable (voir `docs/ai/`) |
 | Chatbot        | intentions + base de connaissances, LLM optionnel | fonctionne sans clé API, respecte les données personnelles |

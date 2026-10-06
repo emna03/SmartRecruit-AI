@@ -59,6 +59,25 @@ Toutes les erreurs ont le même format JSON :
 | 403 | rôle insuffisant ; compte désactivé |
 | 404 | ressource introuvable ou appartenant à un autre utilisateur |
 | 409 | email déjà utilisé, nom d'entreprise déjà pris, candidature déjà envoyée |
+| 422 | données refusées par le service IA (message du service IA) |
+| 503 | service IA arrêté, trop lent (`AI_TIMEOUT_SECONDS`), clé interne refusée, erreur ou réponse invalide du service IA |
+
+## Communication interne Spring Boot → FastAPI
+
+- Le navigateur n'appelle jamais FastAPI : seul Spring Boot le fait, après avoir appliqué JWT et rôles.
+- Chaque appel porte la clé partagée `AI_INTERNAL_API_KEY` (en-tête `X-Internal-Api-Key`) ; FastAPI refuse toute
+  route `/api/**` sans clé valide (**401**, comparaison en temps constant). `/health` reste public et ne révèle rien.
+- FastAPI écoute sur `127.0.0.1` par défaut (pas d'exposition réseau) et refuse de démarrer sans clé,
+  avec une clé de moins de 16 caractères ou avec la valeur d'exemple. Côté Spring Boot, une clé vide désactive
+  les fonctionnalités IA (503) sans empêcher le reste de l'application de fonctionner.
+- Délais : connexion 5 s maximum, réponse `AI_TIMEOUT_SECONDS` (20 s par défaut). Une panne du service IA donne
+  un **503** clair et ne bloque pas le reste de l'API.
+- Toute réponse du service IA est **validée** (Bean Validation sur le DTO) avant d'être utilisée ou affichée ;
+  une réponse incomplète ou incohérente est rejetée (503).
+- Les journaux des deux côtés contiennent la méthode, le chemin, le statut et un identifiant de corrélation
+  (`X-Request-Id`), jamais la clé ni le contenu échangé (données personnelles des CV).
+- Vérification : `GET /api/admin/ai/status` (ADMIN) ; tests `AiServiceClientTest`, `AiAdminApiTest`,
+  `ai-service/tests/` et `scripts/e2e-step7.ps1`.
 
 ## Mesures de protection
 

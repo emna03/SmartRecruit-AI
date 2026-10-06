@@ -1,0 +1,5 @@
+# Dépendances de développement et de test : pip install -r requirements-dev.txt
+-r requirements.txt
+pytest==9.1.1
+# Client HTTP du TestClient de Starlette 1.x (remplace httpx, déprécié pour cet usage)
+httpx2==2.13.1

@@ -6,7 +6,7 @@ Application web de recrutement : les entreprises publient des offres, les candid
 et un module d'IA analyse les CV, calcule un score de compatibilité explicable avec les offres
 et répond aux questions via un chatbot RH.
 
-> **État du projet : ÉTAPES 1 (architecture), 2 (MySQL + Spring Boot), 3 (entités JPA), 4 (JWT + rôles), 5 (profils, entreprises, offres, candidatures) et 6 (frontend Angular connecté au backend) terminées.** Ce README sera complété à l'étape 14.
+> **État du projet : ÉTAPES 1 (architecture), 2 (MySQL + Spring Boot), 3 (entités JPA), 4 (JWT + rôles), 5 (profils, entreprises, offres, candidatures), 6 (frontend Angular connecté au backend) et 7 (socle du service IA FastAPI relié à Spring Boot) terminées.** Ce README sera complété à l'étape 14.
 
 ## Démarrage rapide (provisoire)
 
@@ -16,22 +16,27 @@ docker compose up -d mysql        # MySQL 8.4
 cd backend && mvnw.cmd spring-boot:run
 # GET http://localhost:8080/actuator/health -> {"status":"UP"}
 
+cd ai-service                     # Python 3.13, environnement virtuel dédié (voir ai-service/README.md)
+py -3.13 -m venv .venv && .venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe -m app   # GET http://127.0.0.1:8000/health -> {"status":"UP",...}
+
 cd frontend && npm install && npm start
 # http://localhost:4200 (le proxy redirige /api vers le backend)
 ```
 
-Frontend : [frontend/README.md](frontend/README.md) (structure, tests unitaires et e2e).
+Frontend : [frontend/README.md](frontend/README.md) (structure, tests unitaires et e2e)
+— Service IA : [ai-service/README.md](ai-service/README.md) (installation, configuration, tests).
 
 ## Architecture
 
 ```
 Angular (4200) ──REST/JWT──> Spring Boot (8080) ──> MySQL (3306)
                                    │
-                                   └──REST interne──> FastAPI (8000)
-                                                       ├─ CV Parser / NLP
-                                                       ├─ Matching
-                                                       ├─ Machine Learning
-                                                       └─ Chatbot
+                                   └──REST interne + X-Internal-Api-Key──> FastAPI (127.0.0.1:8000)
+                                                                          ├─ CV Parser / NLP
+                                                                          ├─ Matching
+                                                                          ├─ Machine Learning
+                                                                          └─ Chatbot
 ```
 
 Détails : [docs/architecture.md](docs/architecture.md) — Modèle de données : [docs/database.md](docs/database.md)

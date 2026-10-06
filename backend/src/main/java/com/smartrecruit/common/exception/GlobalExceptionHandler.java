@@ -1,5 +1,7 @@
 package com.smartrecruit.common.exception;
 
+import com.smartrecruit.ai.AiServiceRequestException;
+import com.smartrecruit.ai.AiServiceUnavailableException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -67,6 +69,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex, HttpServletRequest req) {
         return build(HttpStatus.FORBIDDEN, "Accès refusé", req, null);
+    }
+
+    @ExceptionHandler(AiServiceUnavailableException.class)
+    public ResponseEntity<ApiError> handleAiUnavailable(AiServiceUnavailableException ex, HttpServletRequest req) {
+        return build(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), req, null);
+    }
+
+    @ExceptionHandler(AiServiceRequestException.class)
+    public ResponseEntity<ApiError> handleAiRequest(AiServiceRequestException ex, HttpServletRequest req) {
+        return build(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage(), req, null);
     }
 
     @ExceptionHandler(Exception.class)
