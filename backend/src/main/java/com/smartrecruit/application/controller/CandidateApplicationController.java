@@ -3,6 +3,7 @@ package com.smartrecruit.application.controller;
 import com.smartrecruit.application.dto.ApplyRequest;
 import com.smartrecruit.application.dto.CandidateApplicationResponse;
 import com.smartrecruit.application.service.ApplicationService;
+import com.smartrecruit.matching.service.MatchingService;
 import com.smartrecruit.security.AppUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,12 +25,16 @@ import java.util.List;
 public class CandidateApplicationController {
 
     private final ApplicationService applicationService;
+    private final MatchingService matchingService;
 
+    /** Candidature, puis calcul du score de compatibilité (sans effet sur la candidature s'il échoue). */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CandidateApplicationResponse apply(@AuthenticationPrincipal AppUserDetails user,
                                               @Valid @RequestBody ApplyRequest request) {
-        return applicationService.apply(user.getId(), request);
+        CandidateApplicationResponse response = applicationService.apply(user.getId(), request);
+        matchingService.computeAfterApplication(user.getId(), request.jobOfferId());
+        return response;
     }
 
     @GetMapping

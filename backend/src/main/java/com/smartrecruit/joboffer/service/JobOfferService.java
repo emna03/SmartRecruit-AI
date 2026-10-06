@@ -1,6 +1,7 @@
 package com.smartrecruit.joboffer.service;
 
 import com.smartrecruit.common.dto.PageResponse;
+import com.smartrecruit.common.model.EducationLevel;
 import com.smartrecruit.common.exception.BadRequestException;
 import com.smartrecruit.common.exception.ResourceNotFoundException;
 import com.smartrecruit.company.entity.Company;
@@ -11,8 +12,10 @@ import com.smartrecruit.joboffer.entity.JobOffer;
 import com.smartrecruit.joboffer.entity.JobOfferStatus;
 import com.smartrecruit.joboffer.repository.JobOfferRepository;
 import com.smartrecruit.joboffer.repository.JobOfferSpecifications;
+import com.smartrecruit.matching.repository.MatchingResultRepository;
 import com.smartrecruit.recruiter.entity.RecruiterProfile;
 import com.smartrecruit.recruiter.service.RecruiterProfileService;
+import com.smartrecruit.skill.entity.Skill;
 import com.smartrecruit.skill.service.SkillService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +24,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.smartrecruit.common.util.Strings.blankToNull;
 
@@ -33,6 +38,7 @@ public class JobOfferService {
     private final JobOfferRepository jobOfferRepository;
     private final RecruiterProfileService recruiterProfileService;
     private final SkillService skillService;
+    private final MatchingResultRepository matchingResultRepository;
 
     // ---------- Public ----------
 
@@ -88,11 +94,25 @@ public class JobOfferService {
     @Transactional
     public JobOfferResponse update(Long userId, Long offerId, JobOfferRequest request) {
         JobOffer offer = getOwnedEntity(userId, offerId);
+        MatchingCriteria before = MatchingCriteria.of(offer);
         apply(offer, request);
         if (request.status() != null) {
             offer.setStatus(request.status());
         }
+        if (!before.equals(MatchingCriteria.of(offer))) {
+            matchingResultRepository.deleteByJobOfferId(offer.getId());
+        }
         return JobOfferResponse.forOwner(offer);
+    }
+
+    /** Critères utilisés par le matching : s'ils changent, les scores enregistrés pour l'offre sont supprimés. */
+    private record MatchingCriteria(Set<Long> skillIds, int minExperienceYears, EducationLevel educationLevel) {
+
+        static MatchingCriteria of(JobOffer offer) {
+            return new MatchingCriteria(
+                    offer.getRequiredSkills().stream().map(Skill::getId).collect(Collectors.toSet()),
+                    offer.getMinExperienceYears(), offer.getEducationLevel());
+        }
     }
 
     @Transactional

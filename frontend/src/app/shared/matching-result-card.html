@@ -1,0 +1,102 @@
+<div data-testid="matching-result">
+  <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+    <div class="match-score text-{{ level().css }} border-{{ level().css }}" data-testid="matching-score">
+      {{ result().score | number: '1.0-1' }}<span class="fs-6"> %</span>
+    </div>
+    <div>
+      <div class="fw-semibold">Score global</div>
+      <span class="badge text-bg-{{ level().css }}" data-testid="matching-level">{{ level().label }}</span>
+      @if (result().stale) {
+        <span class="badge text-bg-secondary ms-1" data-testid="matching-stale">
+          <i aria-hidden="true" class="bi bi-clock-history me-1"></i>CV modifié depuis ce calcul
+        </span>
+      }
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    @for (sub of subScores(); track sub.label) {
+      <div class="col-sm-4" [attr.data-testid]="sub.testId">
+        <div class="d-flex justify-content-between small mb-1">
+          <span><i aria-hidden="true" class="bi {{ sub.icon }} me-1 text-primary"></i>{{ sub.label }}</span>
+          @if (sub.value !== null) {
+            <strong>{{ sub.value | number: '1.0-1' }} %</strong>
+          } @else {
+            <span class="text-secondary">Non exigé</span>
+          }
+        </div>
+        <div class="progress" style="height: 0.5rem" role="progressbar" [attr.aria-label]="sub.label"
+             [attr.aria-valuenow]="sub.value ?? 0" aria-valuemin="0" aria-valuemax="100">
+          @if (sub.value !== null) {
+            <div class="progress-bar {{ barClass(sub.value) }}" [style.width.%]="sub.value"></div>
+          }
+        </div>
+        <div class="small text-secondary mt-1">
+          @if (sub.value !== null) {
+            Poids : {{ sub.weight * 100 | number: '1.0-0' }} %
+          } @else {
+            Non pris en compte
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="small fw-semibold mb-1">
+        <i aria-hidden="true" class="bi bi-check-circle text-success me-1"></i>Compétences trouvées ({{ fullMatches().length }})
+      </div>
+      <div data-testid="matched-skills">
+        @for (skill of fullMatches(); track skill.name) {
+          <span class="skill-badge matched" [title]="skill.matchType === 'IMPLIED' ? 'Couverte par ' + skill.matchedBy : 'Présente dans le CV'">
+            {{ skill.name }}@if (skill.matchType === 'IMPLIED') {<span class="opacity-75"> (via {{ skill.matchedBy }})</span>}
+          </span>
+        } @empty {
+          <span class="small text-secondary">Aucune</span>
+        }
+      </div>
+      @if (relatedMatches().length) {
+        <div class="small fw-semibold mt-2 mb-1">
+          <i aria-hidden="true" class="bi bi-circle-half text-warning me-1"></i>Compétences proches (crédit 50 %)
+        </div>
+        <div data-testid="related-skills">
+          @for (skill of relatedMatches(); track skill.name) {
+            <span class="skill-badge related" [title]="'Le CV mentionne ' + skill.matchedBy">
+              {{ skill.name }}<span class="opacity-75"> (CV : {{ skill.matchedBy }})</span>
+            </span>
+          }
+        </div>
+      }
+    </div>
+    <div class="col-md-6">
+      <div class="small fw-semibold mb-1">
+        <i aria-hidden="true" class="bi bi-x-circle text-danger me-1"></i>Compétences manquantes ({{ result().missingSkills.length }})
+      </div>
+      <div data-testid="missing-skills">
+        @for (skill of result().missingSkills; track skill) {
+          <span class="skill-badge missing">{{ skill }}</span>
+        } @empty {
+          <span class="small text-secondary">Aucune</span>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="small fw-semibold mb-1"><i aria-hidden="true" class="bi bi-chat-left-text me-1 text-primary"></i>Pourquoi ce score ?</div>
+  <p class="small text-pre-line bg-light rounded p-2 mb-3" data-testid="matching-explanation">{{ result().explanation }}</p>
+
+  <div class="alert alert-info small py-2 mb-2" role="note" data-testid="matching-disclaimer">
+    <i aria-hidden="true" class="bi bi-info-circle me-1"></i>
+    @if (audience() === 'recruiter') {
+      <strong>Aide à la décision uniquement.</strong> Ce score est calculé automatiquement à partir du CV et de l'offre ;
+      il ne remplace pas l'examen de la candidature et ne constitue pas une décision de recrutement.
+    } @else {
+      Ce score est une <strong>indication</strong> calculée automatiquement à partir de votre CV et de l'offre :
+      il ne constitue pas une décision de recrutement.
+    }
+  </div>
+  <div class="small text-secondary" data-testid="matching-meta">
+    Algorithme v{{ result().algorithmVersion }} · calculé le {{ computedAt() | date: 'dd/MM/yyyy à HH:mm' }}
+  </div>
+</div>

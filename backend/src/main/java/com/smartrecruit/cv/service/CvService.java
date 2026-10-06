@@ -17,6 +17,7 @@ import com.smartrecruit.cv.dto.CvResponse;
 import com.smartrecruit.cv.entity.Cv;
 import com.smartrecruit.cv.entity.CvParsingStatus;
 import com.smartrecruit.cv.repository.CvRepository;
+import com.smartrecruit.matching.repository.MatchingResultRepository;
 import com.smartrecruit.skill.entity.Skill;
 import com.smartrecruit.skill.service.SkillService;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -61,6 +63,7 @@ public class CvService {
     static final int MAX_PROFILE_SKILLS = 50;
 
     private final CvRepository cvRepository;
+    private final MatchingResultRepository matchingResultRepository;
     private final CandidateProfileService profileService;
     private final SkillService skillService;
     private final AiServiceClient aiClient;
@@ -70,11 +73,13 @@ public class CvService {
     private final TransactionTemplate readOnlyTransaction;
     private final DataSize maxFileSize;
 
-    public CvService(CvRepository cvRepository, CandidateProfileService profileService, SkillService skillService,
+    public CvService(CvRepository cvRepository, MatchingResultRepository matchingResultRepository,
+                     CandidateProfileService profileService, SkillService skillService,
                      AiServiceClient aiClient, CvStorage storage, ObjectMapper objectMapper,
                      PlatformTransactionManager transactionManager,
                      @Value("${spring.servlet.multipart.max-file-size}") DataSize maxFileSize) {
         this.cvRepository = cvRepository;
+        this.matchingResultRepository = matchingResultRepository;
         this.profileService = profileService;
         this.skillService = skillService;
         this.aiClient = aiClient;
@@ -164,6 +169,7 @@ public class CvService {
                 throw new ResourceNotFoundException(NO_CV_MESSAGE);
             }
             String name = cv.getStoredFileName();
+            matchingResultRepository.deleteByCandidateId(profile.getId());
             profile.attachCv(null);
             cvRepository.delete(cv);
             cvRepository.flush();
@@ -287,6 +293,14 @@ public class CvService {
     private CvResponse toResponse(Cv cv) {
         return new CvResponse(cv.getId(), cv.getOriginalFileName(), cv.getFileSize(), cv.getParsingStatus(),
                 cv.getParsingError(), cv.getParsedAt(), cv.getUpdatedAt(), readAnalysis(cv));
+    }
+
+    /** Analyse validée du CV, ou vide s'il n'est pas (ou plus) analysé. */
+    public Optional<CvParseResult> analysisOf(Cv cv) {
+        if (cv == null || cv.getParsingStatus() != CvParsingStatus.TERMINE) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(readAnalysis(cv));
     }
 
     private CvParseResult readAnalysis(Cv cv) {

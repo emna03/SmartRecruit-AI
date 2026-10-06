@@ -113,11 +113,35 @@ Offre inexistante → 404 ; offre non publiée → 400 ; déjà postulé → 409
 
 | Méthode | Chemin | Description |
 |---|---|---|
-| GET | `/api/recruiter/jobs/{jobId}/applications` | candidats d'une offre (résumé + compétences) |
-| GET | `/api/recruiter/applications/{id}` | détail avec le profil complet du candidat |
+| GET | `/api/recruiter/jobs/{jobId}/applications` | candidats d'une offre **classés par score de compatibilité décroissant** (résumé, compétences, `matching`) |
+| GET | `/api/recruiter/applications/{id}` | détail avec le profil complet du candidat et son score (`matching`) |
 | PATCH | `/api/recruiter/applications/{id}/status` | `{status: EN_ATTENTE \| PRESELECTIONNE \| ACCEPTE \| REFUSE}` |
 
-Le candidat voit immédiatement le nouveau statut. Le score de matching sera ajouté à l'étape du module IA.
+Le candidat voit immédiatement le nouveau statut. Les candidats sans score (pas de CV analysé) suivent les candidats
+classés, du plus récent au plus ancien ; `candidate.cvAnalyzed` indique si un score est calculable.
+
+## Score de compatibilité (matching CV ↔ offre)
+
+Formule, pondérations, limites et version de l'algorithme : [ai/matching.md](ai/matching.md).
+Le score est une aide pour le recruteur, jamais une décision automatique.
+
+| Rôle | Méthode | Chemin | Description |
+|---|---|---|---|
+| `CANDIDAT` | GET | `/api/candidate/jobs/{jobId}/matching` | score du candidat connecté, recalculé à partir de son CV analysé et enregistré |
+| `RECRUTEUR` | POST | `/api/recruiter/jobs/{jobId}/matching` | recalcule les scores des candidats de l'offre ayant un CV analysé → `{computed, withoutAnalyzedCv, applications[]}` (classées) |
+
+Réponse candidat : `{status, message, result}` avec `status` ∈ `CALCULE`, `CV_ABSENT`, `CV_NON_ANALYSE`,
+`IA_INDISPONIBLE` (dans ce dernier cas, `result` = dernier score enregistré s'il existe).
+
+Résultat (`result` / `matching`) : `{score, skillsScore, experienceScore, educationScore, matchedSkills[{name, matchedBy,
+matchType: EXACT|IMPLIED|RELATED, credit}], missingSkills[], explanation, algorithmVersion, computedAt, stale}` —
+`experienceScore` / `educationScore` valent `null` quand l'offre n'exige pas ce critère ; `stale` signale un score
+calculé avant la dernière mise à jour du CV.
+
+- Offre non publiée sans candidature, ou inexistante → 404 ; offre d'une autre entreprise (recruteur) → 404.
+- Service IA indisponible ou réponse invalide : candidat → `IA_INDISPONIBLE` (200) ; recalcul recruteur → 503.
+- Le score est aussi calculé automatiquement après une candidature (sans faire échouer la candidature).
+- Scores supprimés quand le CV est supprimé ou quand les compétences, l'expérience ou le niveau de l'offre changent.
 
 ## Administration (`ADMIN`)
 
@@ -138,3 +162,5 @@ Le candidat voit immédiatement le nouveau statut. Le score de matching sera ajo
   — `powershell -ExecutionPolicy Bypass -File scripts/e2e-step5.ps1 -BaseUrl http://localhost:8080`.
 - CV : `CandidateCvApiTest` (12), `CvFileValidatorTest` (13) ; `scripts/e2e-step8.ps1` : parcours réel
   Spring Boot → FastAPI → MySQL (47 vérifications, service IA arrêté au départ : le script le lance lui-même).
+- Matching : `MatchingApiTest` (11) ; `scripts/e2e-step9.ps1` : vrais CV → FastAPI → MySQL, classement recruteur,
+  panne du service IA, invalidation (49 vérifications, service IA arrêté au départ).

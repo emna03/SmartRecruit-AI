@@ -6,7 +6,7 @@ Chaque sous-package est implémenté dans une étape dédiée et publie ses rout
 
 MODULES: dict[str, bool] = {
     "cv_parser": True,  # étape 8
-    "matching": False,  # étape 9
+    "matching": True,  # étape 9
     "chatbot": False,  # étape 10
     "ml": False,  # étape 11
 }

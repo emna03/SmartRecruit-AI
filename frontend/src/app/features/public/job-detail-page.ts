@@ -7,23 +7,29 @@ import { Router, RouterLink } from '@angular/router';
 import { catchError, EMPTY, forkJoin, of, switchMap, tap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { emptyToNull, errorMessage } from '../../core/http-errors';
-import { CandidateApplication, JobOffer } from '../../core/models';
+import { CandidateApplication, CandidateMatching, JobOffer } from '../../core/models';
 import { ApplicationService } from '../../core/services/application.service';
 import { JobOfferService } from '../../core/services/job-offer.service';
+import { MatchingService } from '../../core/services/matching.service';
 import { ToastService } from '../../core/services/toast.service';
 import { FieldError } from '../../shared/field-error';
 import { LabelPipe } from '../../shared/label.pipe';
 import { LoadingSpinner } from '../../shared/loading-spinner';
+import { MatchingResultCard } from '../../shared/matching-result-card';
 import { StatusBadge } from '../../shared/status-badge';
 
 @Component({
   selector: 'app-job-detail-page',
-  imports: [RouterLink, ReactiveFormsModule, DatePipe, DecimalPipe, LabelPipe, LoadingSpinner, StatusBadge, FieldError],
+  imports: [
+    RouterLink, ReactiveFormsModule, DatePipe, DecimalPipe, LabelPipe, LoadingSpinner, StatusBadge, FieldError,
+    MatchingResultCard,
+  ],
   templateUrl: './job-detail-page.html',
 })
 export class JobDetailPage implements OnInit {
   private readonly jobService = inject(JobOfferService);
   private readonly applicationService = inject(ApplicationService);
+  private readonly matchingService = inject(MatchingService);
   private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -41,6 +47,9 @@ export class JobDetailPage implements OnInit {
   readonly applying = signal(false);
   readonly applyError = signal<string | null>(null);
   readonly showApplyForm = signal(false);
+  readonly matching = signal<CandidateMatching | null>(null);
+  readonly matchingLoading = signal(false);
+  readonly matchingError = signal<string | null>(null);
 
   readonly isCandidate = computed(() => this.auth.role() === 'CANDIDAT');
   readonly coverLetter = new FormControl('', { nonNullable: true, validators: Validators.maxLength(5000) });
@@ -77,6 +86,29 @@ export class JobDetailPage implements OnInit {
         this.job.set(job);
         this.myApplication.set(applications.find((a) => a.job.id === job.id) ?? null);
         this.loading.set(false);
+        if (this.isCandidate()) {
+          this.loadMatching(job.id);
+        }
+      });
+  }
+
+  /** Score de compatibilité du candidat avec l'offre (recalculé à partir de son CV analysé). */
+  loadMatching(jobId: number): void {
+    this.matching.set(null);
+    this.matchingError.set(null);
+    this.matchingLoading.set(true);
+    this.matchingService
+      .getForOffer(jobId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (matching) => {
+          this.matching.set(matching);
+          this.matchingLoading.set(false);
+        },
+        error: (err) => {
+          this.matchingError.set(errorMessage(err, 'Impossible de calculer votre compatibilité avec cette offre.'));
+          this.matchingLoading.set(false);
+        },
       });
   }
 

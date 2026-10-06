@@ -250,7 +250,7 @@ test('E6 le recruteur consulte le candidat et le présélectionne', async ({ pag
   await expect(toast(page, 'présélectionné')).toBeVisible();
   await page.screenshot({ path: join(screenshotDir, '07-recruteur-candidats.png'), fullPage: true });
 
-  await card.getByRole('link', { name: 'Voir le profil complet' }).click();
+  await card.getByRole('link', { name: 'Profil et détail du score' }).click();
   await expect(page.getByRole('heading', { name: 'Élodie Martin' })).toBeVisible();
   await expect(page.getByText('Stagiaire développeuse — Globex')).toBeVisible();
   await expect(page.getByText('Très motivée par ce poste Angular.')).toBeVisible();

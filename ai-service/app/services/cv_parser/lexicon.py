@@ -81,6 +81,12 @@ class Lexicon:
     def size(self) -> int:
         return len(set(self._by_key.values()) | set(self._by_case_key.values()))
 
+    def canonical(self, name: str) -> str | None:
+        """Nom de référence d'un nom ou alias connu (« k8s » -> « Kubernetes »), sinon None."""
+        name = name.strip()
+        entry = self._by_key.get(_key(fold(name))) or self._by_case_key.get(_key(_strip_accents(name)))
+        return entry.name if entry else None
+
     def find(self, text: str) -> Counter[LexiconEntry]:
         """Nombre d'occurrences de chaque entrée du lexique dans ``text``."""
         counts: Counter[LexiconEntry] = Counter()

@@ -14,7 +14,7 @@ def test_status_with_valid_key(client, auth_headers):
     assert body["service"] == SERVICE_NAME
     assert body["version"] == __version__
     # Seul le CV Parser (étape 8) est implémenté : les autres modules ne doivent pas être annoncés.
-    assert body["modules"] == {"cv_parser": True, "matching": False, "chatbot": False, "ml": False}
+    assert body["modules"] == {"cv_parser": True, "matching": True, "chatbot": False, "ml": False}
 
 
 def test_status_without_key_is_refused(client):

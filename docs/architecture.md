@@ -62,6 +62,8 @@ Spring Boot construit {compétences CV, expérience, diplôme} + {compétences r
   → enregistré dans MatchingResult, utilisé pour trier les candidats
 ```
 
+Formule (compétences 60 %, expérience 25 %, formation 15 %), exemples et limites : [ai/matching.md](ai/matching.md).
+
 ### 2.3 Chatbot RH
 
 ```

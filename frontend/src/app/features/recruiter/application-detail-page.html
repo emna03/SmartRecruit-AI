@@ -10,6 +10,23 @@
 
   <div class="row g-4">
     <div class="col-lg-8">
+      <div class="card mb-4" data-testid="application-matching">
+        <div class="card-header bg-white section-title">
+          <i aria-hidden="true" class="bi bi-bullseye me-2 text-primary"></i>Compatibilité avec l'offre
+        </div>
+        <div class="card-body">
+          @if (a.matching; as m) {
+            <app-matching-result-card [result]="m" audience="recruiter" />
+          } @else {
+            <div class="small text-secondary" data-testid="application-matching-none">
+              <i aria-hidden="true" class="bi bi-info-circle me-1"></i>
+              Aucun score : le candidat n'a pas de CV analysé, ou le score n'a pas encore été calculé
+              (bouton « Calculer les scores » sur la liste des candidats).
+            </div>
+          }
+        </div>
+      </div>
+
       <div class="card mb-4">
         <div class="card-body p-4">
           <h1 class="h4 fw-bold mb-1">{{ a.candidate.firstName }} {{ a.candidate.lastName }}</h1>

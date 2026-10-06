@@ -25,7 +25,7 @@ export class ApplicationService {
     return this.http.get<ApplicationDetail>(`${API_URL}/recruiter/applications/${id}`);
   }
 
-  updateStatus(id: number, status: ApplicationStatus): Observable<RecruiterApplication> {
-    return this.http.patch<RecruiterApplication>(`${API_URL}/recruiter/applications/${id}/status`, { status });
+  updateStatus(id: number, status: ApplicationStatus): Observable<ApplicationDetail> {
+    return this.http.patch<ApplicationDetail>(`${API_URL}/recruiter/applications/${id}/status`, { status });
   }
 }

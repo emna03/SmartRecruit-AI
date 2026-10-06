@@ -14,12 +14,34 @@
         <span class="ms-2">· {{ applications().length }} candidature(s)</span>
       </div>
     </div>
-    <a class="btn btn-outline-secondary btn-sm" [routerLink]="['/recruiter/jobs', job.id, 'edit']"><i aria-hidden="true" class="bi bi-pencil me-1"></i>Modifier l'offre</a>
+    <div class="d-flex flex-wrap gap-2">
+      @if (applications().length) {
+        <button class="btn btn-primary btn-sm" type="button" (click)="refreshScores()" [disabled]="refreshing()" data-testid="refresh-scores">
+          @if (refreshing()) {
+            <span class="spinner-border spinner-border-sm me-1"></span>
+          } @else {
+            <i aria-hidden="true" class="bi bi-bullseye me-1"></i>
+          }
+          {{ scoredCount() ? 'Recalculer les scores' : 'Calculer les scores' }}
+        </button>
+      }
+      <a class="btn btn-outline-secondary btn-sm" [routerLink]="['/recruiter/jobs', job.id, 'edit']"><i aria-hidden="true" class="bi bi-pencil me-1"></i>Modifier l'offre</a>
+    </div>
   </div>
 
   @if (applications().length === 0) {
     <div class="card"><div class="empty-state"><i aria-hidden="true" class="bi bi-people"></i>Aucune candidature reçue pour cette offre.</div></div>
   } @else {
+    <div class="alert alert-info small py-2" role="note" data-testid="ranking-disclaimer">
+      <i aria-hidden="true" class="bi bi-info-circle me-1"></i>
+      Candidats classés du meilleur au moins bon <strong>score de compatibilité</strong> (compétences 60 %, expérience 25 %,
+      formation 15 %), calculé à partir du CV analysé. C'est une <strong>aide à la décision</strong> : il ne remplace pas
+      l'examen des candidatures et ne constitue pas une décision de recrutement.
+      @if (staleCount()) {
+        <div class="mt-1" data-testid="stale-warning"><i aria-hidden="true" class="bi bi-clock-history me-1"></i>{{ staleCount() }} score(s) calculé(s) avant une mise à jour du CV : recalculez les scores.</div>
+      }
+    </div>
+
     <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Filtrer par statut">
       <button type="button" [class]="filter() === null ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline-secondary'"
               (click)="filter.set(null)">Toutes ({{ applications().length }})</button>
@@ -35,7 +57,24 @@
           <div class="card" data-testid="candidate-card">
             <div class="card-body">
               <div class="row g-3 align-items-center">
-                <div class="col-lg-5">
+                <div class="col-lg-2 text-lg-center" data-testid="candidate-matching">
+                  @if (a.matching; as m) {
+                    <div class="small text-secondary" data-testid="candidate-rank">#{{ ranks().get(a.id) }}</div>
+                    <div class="fs-5"><app-match-score-badge [score]="m.score" /></div>
+                    <div class="small text-secondary mt-1">
+                      Comp. {{ m.skillsScore | number: '1.0-0' }} %
+                      @if (m.experienceScore !== null) { · Exp. {{ m.experienceScore | number: '1.0-0' }} % }
+                      @if (m.educationScore !== null) { · Form. {{ m.educationScore | number: '1.0-0' }} % }
+                    </div>
+                    @if (m.stale) {
+                      <span class="badge text-bg-secondary mt-1" data-testid="candidate-stale">CV modifié</span>
+                    }
+                  } @else {
+                    <span class="badge text-bg-light border" data-testid="match-score-none">Sans score</span>
+                    <div class="small text-secondary mt-1">{{ noScoreReason(a) }}</div>
+                  }
+                </div>
+                <div class="col-lg-4">
                   <div class="fw-semibold">{{ a.candidate.firstName }} {{ a.candidate.lastName }}</div>
                   <div class="small text-secondary">{{ a.candidate.headline || 'Profil sans titre' }}</div>
                   <div class="small text-secondary mt-1">
@@ -49,11 +88,19 @@
                     · postulé le {{ a.appliedAt | date: 'dd/MM/yyyy' }}
                   </div>
                 </div>
-                <div class="col-lg-4">
+                <div class="col-lg-3">
                   @for (skill of a.candidate.skills; track skill) {
                     <span class="skill-badge" [class.matched]="isRequired(skill)" [title]="isRequired(skill) ? 'Compétence demandée par l’offre' : ''">{{ skill }}</span>
                   } @empty {
                     <span class="small text-secondary">Aucune compétence renseignée</span>
+                  }
+                  @if (a.matching?.missingSkills?.length) {
+                    <div class="small mt-1" data-testid="candidate-missing">
+                      <span class="text-secondary">Manquantes (CV) :</span>
+                      @for (skill of a.matching!.missingSkills; track skill) {
+                        <span class="skill-badge missing">{{ skill }}</span>
+                      }
+                    </div>
                   }
                 </div>
                 <div class="col-lg-3">
@@ -65,7 +112,7 @@
                       <option [value]="o.value" [selected]="o.value === a.status">{{ o.label }}</option>
                     }
                   </select>
-                  <a class="btn btn-sm btn-outline-primary w-100" [routerLink]="['/recruiter/applications', a.id]">Voir le profil complet</a>
+                  <a class="btn btn-sm btn-outline-primary w-100" [routerLink]="['/recruiter/applications', a.id]">Profil et détail du score</a>
                 </div>
               </div>
             </div>
@@ -75,6 +122,9 @@
         <div class="col-12 text-center text-secondary py-4">Aucune candidature avec ce statut.</div>
       }
     </div>
-    <p class="small text-secondary mt-3"><span class="skill-badge matched">vert</span> = compétence du candidat également demandée par l'offre.</p>
+    <p class="small text-secondary mt-3">
+      <span class="skill-badge matched">vert</span> = compétence du profil également demandée par l'offre ;
+      <span class="skill-badge missing">rouge</span> = compétence requise absente du CV analysé.
+    </p>
   }
 }

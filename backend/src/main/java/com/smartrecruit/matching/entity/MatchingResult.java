@@ -13,14 +13,18 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * Dernier score de compatibilité calculé entre un candidat et une offre.
- * Les sous-scores et listes de compétences rendent le score explicable.
- * Il existe indépendamment d'une candidature (le candidat peut consulter son score avant de postuler).
+ * Dernier score de compatibilité calculé entre un candidat et une offre (service IA, module matching).
+ * Les sous-scores et listes de compétences rendent le score explicable ; un sous-score null signifie que
+ * l'offre n'exige rien sur ce critère (il n'entre pas dans le score global).
+ * Il existe indépendamment d'une candidature (le candidat peut consulter son score avant de postuler) ;
+ * le recruteur ne voit que les scores des candidats ayant postulé à son offre.
  */
 @Getter
 @Setter
@@ -33,10 +37,12 @@ public class MatchingResult extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "candidate_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private CandidateProfile candidate;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "job_offer_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private JobOffer jobOffer;
 
     /** Score global de 0 à 100. */
@@ -52,7 +58,10 @@ public class MatchingResult extends BaseEntity {
     @Column(name = "education_score", precision = 5, scale = 2)
     private BigDecimal educationScore;
 
-    /** Tableau JSON des compétences trouvées, ex. ["Java","Angular"]. */
+    /**
+     * Tableau JSON des compétences requises trouvées, avec la compétence du CV qui les couvre et le type de
+     * correspondance, ex. [{"name":"SQL","matchedBy":"MySQL","matchType":"IMPLIED","credit":1.0}].
+     */
     @Column(name = "matched_skills", columnDefinition = "TEXT")
     private String matchedSkills;
 

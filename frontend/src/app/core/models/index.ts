@@ -5,4 +5,5 @@ export * from './common.models';
 export * from './cv.models';
 export * from './job.models';
 export * from './labels';
+export * from './matching.models';
 export * from './recruiter.models';

@@ -36,6 +36,49 @@
             </div>
           </div>
         </div>
+
+        @if (isCandidate()) {
+          <div class="card mt-4" data-testid="matching-card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+              <span class="section-title"><i aria-hidden="true" class="bi bi-bullseye me-2 text-primary"></i>Votre compatibilité avec cette offre</span>
+              @if (!matchingLoading() && matching()?.status !== 'CV_ABSENT' && matching()?.status !== 'CV_NON_ANALYSE') {
+                <button class="btn btn-link btn-sm" type="button" (click)="loadMatching(job.id)" data-testid="matching-reload">
+                  <i aria-hidden="true" class="bi bi-arrow-repeat me-1"></i>Recalculer
+                </button>
+              }
+            </div>
+            <div class="card-body">
+              @if (matchingLoading()) {
+                <app-loading-spinner label="Calcul de votre compatibilité..." />
+              } @else if (matchingError()) {
+                <div class="alert alert-danger small mb-0" data-testid="matching-error">{{ matchingError() }}</div>
+              } @else if (matching(); as m) {
+                @switch (m.status) {
+                  @case ('CV_ABSENT') {
+                    <div class="alert alert-light border small mb-0" data-testid="matching-status">
+                      <i aria-hidden="true" class="bi bi-file-earmark-arrow-up me-1"></i>{{ m.message }}
+                      <a class="ms-1" routerLink="/candidate/cv">Importer mon CV</a>
+                    </div>
+                  }
+                  @case ('CV_NON_ANALYSE') {
+                    <div class="alert alert-warning small mb-0" data-testid="matching-status">
+                      <i aria-hidden="true" class="bi bi-exclamation-triangle me-1"></i>{{ m.message }}
+                      <a class="ms-1" routerLink="/candidate/cv">Aller à « Mon CV »</a>
+                    </div>
+                  }
+                  @case ('IA_INDISPONIBLE') {
+                    <div class="alert alert-warning small" data-testid="matching-status">
+                      <i aria-hidden="true" class="bi bi-cloud-slash me-1"></i>{{ m.message }}
+                    </div>
+                  }
+                }
+                @if (m.result; as result) {
+                  <app-matching-result-card [result]="result" />
+                }
+              }
+            </div>
+          </div>
+        }
       </div>
 
       <div class="col-lg-4">

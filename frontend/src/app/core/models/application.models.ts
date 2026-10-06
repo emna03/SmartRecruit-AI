@@ -1,5 +1,6 @@
 import { CandidateProfile } from './candidate.models';
 import { ApplicationStatus, ContractType, EducationLevel, JobOfferStatus } from './common.models';
+import { MatchingResult } from './matching.models';
 
 /** Candidature vue par le candidat. */
 export interface CandidateApplication {
@@ -36,10 +37,13 @@ export interface RecruiterApplication {
     educationLevel: EducationLevel | null;
     skills: string[];
     hasCv: boolean;
+    cvAnalyzed: boolean;
   };
+  /** Score de compatibilité, null s'il n'a pas pu être calculé (CV absent ou non analysé). */
+  matching: MatchingResult | null;
 }
 
-/** Détail d'une candidature pour le recruteur (profil complet). */
+/** Détail d'une candidature pour le recruteur (profil complet et score de compatibilité). */
 export interface ApplicationDetail {
   id: number;
   jobOfferId: number;
@@ -49,4 +53,5 @@ export interface ApplicationDetail {
   appliedAt: string;
   updatedAt: string;
   candidate: CandidateProfile;
+  matching: MatchingResult | null;
 }

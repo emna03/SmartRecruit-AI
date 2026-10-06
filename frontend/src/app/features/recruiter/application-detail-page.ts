@@ -7,11 +7,12 @@ import { ApplicationService } from '../../core/services/application.service';
 import { ToastService } from '../../core/services/toast.service';
 import { LabelPipe } from '../../shared/label.pipe';
 import { LoadingSpinner } from '../../shared/loading-spinner';
+import { MatchingResultCard } from '../../shared/matching-result-card';
 import { StatusBadge } from '../../shared/status-badge';
 
 @Component({
   selector: 'app-application-detail-page',
-  imports: [RouterLink, DatePipe, LabelPipe, LoadingSpinner, StatusBadge],
+  imports: [RouterLink, DatePipe, LabelPipe, LoadingSpinner, StatusBadge, MatchingResultCard],
   templateUrl: './application-detail-page.html',
 })
 export class ApplicationDetailPage implements OnInit {

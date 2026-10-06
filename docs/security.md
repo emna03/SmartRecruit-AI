@@ -95,6 +95,18 @@ Toutes les erreurs ont le même format JSON :
   le nom du fichier ni une donnée personnelle du CV.
 - Suppression du CV ou du compte (admin) : la ligne et le fichier disque sont supprimés.
 
+## Score de compatibilité (matching)
+
+- Le service IA ne reçoit **aucune donnée d'identité** : noms de compétences extraits du CV, durée d'expérience en mois
+  et niveau d'études, plus les critères de l'offre. Tout champ non prévu (ex. `email`) est refusé par FastAPI (400).
+- Le résultat est validé (Pydantic, puis Bean Validation dans Spring Boot : scores 0–100, listes bornées et cohérentes)
+  avant enregistrement et affichage ; une réponse invalide n'est jamais enregistrée.
+- Le candidat ne voit que **son** score, pour une offre publiée ou à laquelle il a postulé. Le recruteur ne voit que les
+  scores des candidats ayant postulé aux offres de **son** entreprise (autre entreprise → 404).
+- Le score est présenté comme une aide à la décision : aucun statut de candidature n'est modifié automatiquement.
+- Journaux : identifiants, score et compteurs uniquement (jamais de nom, d'email ni de compétence).
+- Les scores sont supprimés avec le CV, avec le compte ou l'offre (cascade MySQL), et quand les critères de l'offre changent.
+
 ## Mesures de protection
 
 - Mots de passe hachés avec **BCrypt** ; le hash n'est jamais renvoyé par l'API.

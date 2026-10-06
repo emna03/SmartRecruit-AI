@@ -9,6 +9,8 @@ import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,6 +27,11 @@ public final class StubAiServer implements AutoCloseable {
     private volatile long delayMs;
     private volatile HttpExchange lastExchange;
     private volatile byte[] lastBody;
+    private final Map<String, Route> routes = new ConcurrentHashMap<>();
+    private final Map<String, AtomicInteger> pathCounts = new ConcurrentHashMap<>();
+
+    private record Route(int status, String body) {
+    }
 
     private StubAiServer() {
         try {
@@ -55,6 +62,16 @@ public final class StubAiServer implements AutoCloseable {
         this.body = body;
     }
 
+    /** Réponse propre à un chemin (prioritaire sur {@link #respond}). */
+    public void respondTo(String path, int status, String body) {
+        routes.put(path, new Route(status, body));
+    }
+
+    /** Requêtes reçues sur un chemin donné. */
+    public int requestCount(String path) {
+        return pathCounts.getOrDefault(path, new AtomicInteger()).get();
+    }
+
     public void delay(long delayMs) {
         this.delayMs = delayMs;
     }
@@ -62,6 +79,8 @@ public final class StubAiServer implements AutoCloseable {
     public void reset() {
         respond(200, "{}");
         delay(0);
+        routes.clear();
+        pathCounts.clear();
         requestCount.set(0);
         lastExchange = null;
         lastBody = null;
@@ -99,15 +118,18 @@ public final class StubAiServer implements AutoCloseable {
 
     private void handle(HttpExchange exchange) throws IOException {
         requestCount.incrementAndGet();
+        String path = exchange.getRequestURI().getPath();
+        pathCounts.computeIfAbsent(path, p -> new AtomicInteger()).incrementAndGet();
         lastBody = exchange.getRequestBody().readAllBytes();
         lastExchange = exchange;
+        Route route = routes.getOrDefault(path, new Route(status, body));
         try {
             if (delayMs > 0) {
                 Thread.sleep(delayMs);
             }
-            byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
+            byte[] bytes = route.body().getBytes(StandardCharsets.UTF_8);
             exchange.getResponseHeaders().set("Content-Type", "application/json");
-            exchange.sendResponseHeaders(status, bytes.length == 0 ? -1 : bytes.length);
+            exchange.sendResponseHeaders(route.status(), bytes.length == 0 ? -1 : bytes.length);
             if (bytes.length > 0) {
                 try (OutputStream out = exchange.getResponseBody()) {
                     out.write(bytes);

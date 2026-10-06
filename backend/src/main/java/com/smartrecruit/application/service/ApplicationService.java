@@ -17,12 +17,20 @@ import com.smartrecruit.joboffer.entity.JobOffer;
 import com.smartrecruit.joboffer.entity.JobOfferStatus;
 import com.smartrecruit.joboffer.repository.JobOfferRepository;
 import com.smartrecruit.joboffer.service.JobOfferService;
+import com.smartrecruit.matching.dto.MatchingResultResponse;
+import com.smartrecruit.matching.entity.MatchingResult;
+import com.smartrecruit.matching.repository.MatchingResultRepository;
+import com.smartrecruit.matching.service.MatchingResultMapper;
 import com.smartrecruit.recruiter.service.RecruiterProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.smartrecruit.common.util.Strings.blankToNull;
 
@@ -35,6 +43,12 @@ public class ApplicationService {
     private final CandidateProfileService candidateProfileService;
     private final RecruiterProfileService recruiterProfileService;
     private final JobOfferService jobOfferService;
+    private final MatchingResultRepository matchingResultRepository;
+    private final MatchingResultMapper matchingMapper;
+
+    private static final Comparator<RecruiterApplicationResponse> BEST_SCORE_FIRST = Comparator.comparing(
+            (RecruiterApplicationResponse r) -> r.matching() == null ? null : r.matching().score(),
+            Comparator.nullsLast(Comparator.reverseOrder()));
 
     // ---------- Candidat ----------
 
@@ -76,23 +90,46 @@ public class ApplicationService {
 
     // ---------- Recruteur (candidatures aux offres de son entreprise) ----------
 
+    /**
+     * Candidatures d'une offre classées du meilleur score de compatibilité au moins bon ; les candidats sans score
+     * (CV absent ou non analysé) viennent ensuite. À score égal, la candidature la plus récente d'abord.
+     */
     @Transactional(readOnly = true)
     public List<RecruiterApplicationResponse> findForOffer(Long userId, Long offerId) {
-        JobOffer offer = jobOfferService.getOwnedEntity(userId, offerId);
-        return applicationRepository.findByJobOfferIdOrderByCreatedAtDesc(offer.getId()).stream()
-                .map(RecruiterApplicationResponse::from).toList();
+        return rankedApplications(jobOfferService.getOwnedEntity(userId, offerId).getId());
+    }
+
+    /** Même classement, pour une offre dont l'appartenance au recruteur a déjà été vérifiée. */
+    @Transactional(readOnly = true)
+    public List<RecruiterApplicationResponse> rankedApplications(Long offerId) {
+        Map<Long, MatchingResult> scores = matchingResultRepository.findByJobOfferIdOrderByScoreDesc(offerId)
+                .stream().collect(Collectors.toMap(m -> m.getCandidate().getId(), Function.identity()));
+        return applicationRepository.findByJobOfferIdOrderByCreatedAtDesc(offerId).stream()
+                .map(a -> RecruiterApplicationResponse.from(a, matchingMapper.toResponse(
+                        scores.get(a.getCandidate().getId()), a.getCandidate().getCv())))
+                .sorted(BEST_SCORE_FIRST)
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public ApplicationDetailResponse getForRecruiter(Long userId, Long applicationId) {
-        return ApplicationDetailResponse.from(getOwnedByRecruiter(userId, applicationId));
+        Application application = getOwnedByRecruiter(userId, applicationId);
+        return ApplicationDetailResponse.from(application, matchingOf(application));
     }
 
     @Transactional
     public ApplicationDetailResponse updateStatus(Long userId, Long applicationId, ApplicationStatus status) {
         Application application = getOwnedByRecruiter(userId, applicationId);
         application.setStatus(status);
-        return ApplicationDetailResponse.from(application);
+        return ApplicationDetailResponse.from(application, matchingOf(application));
+    }
+
+    private MatchingResultResponse matchingOf(Application application) {
+        CandidateProfile candidate = application.getCandidate();
+        return matchingResultRepository.findByCandidateIdAndJobOfferId(candidate.getId(),
+                        application.getJobOffer().getId())
+                .map(m -> matchingMapper.toResponse(m, candidate.getCv()))
+                .orElse(null);
     }
 
     private Application getOwnedByRecruiter(Long userId, Long applicationId) {
