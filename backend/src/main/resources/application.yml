@@ -30,10 +30,14 @@ spring:
   servlet:
     multipart:
       max-file-size: ${MAX_CV_SIZE_MB:5}MB
-      max-request-size: ${MAX_CV_SIZE_MB:5}MB
+      # Plus large que max-file-size : un CV trop gros (jusqu'à 20 Mo) reçoit une réponse 413 lisible ;
+      # au-delà, Tomcat coupe la connexion sans lire le corps.
+      max-request-size: 20MB
 
 server:
   port: ${SERVER_PORT:8080}
+  tomcat:
+    max-swallow-size: 20MB
   error:
     include-stacktrace: never
     include-message: never

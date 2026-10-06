@@ -56,14 +56,19 @@ public class AiServiceClient {
     }
 
     public <T> T get(String path, Class<T> responseType) {
-        return exchange(HttpMethod.GET, path, null, responseType);
+        return exchange(HttpMethod.GET, path, null, null, responseType);
     }
 
     public <T> T post(String path, Object body, Class<T> responseType) {
-        return exchange(HttpMethod.POST, path, body, responseType);
+        return exchange(HttpMethod.POST, path, body, MediaType.APPLICATION_JSON, responseType);
     }
 
-    private <T> T exchange(HttpMethod method, String path, Object body, Class<T> responseType) {
+    /** Envoie un contenu binaire brut (ex. un CV PDF) ; le contenu n'est jamais journalisé. */
+    public <T> T postBinary(String path, byte[] content, MediaType contentType, Class<T> responseType) {
+        return exchange(HttpMethod.POST, path, content, contentType, responseType);
+    }
+
+    private <T> T exchange(HttpMethod method, String path, Object body, MediaType contentType, Class<T> responseType) {
         if (!configured) {
             log.error("Appel au service IA impossible ({} {}) : AI_INTERNAL_API_KEY absente", method, path);
             throw new AiServiceUnavailableException(AiServiceUnavailableException.Reason.NOT_CONFIGURED);
@@ -75,7 +80,7 @@ public class AiServiceClient {
                     .header(REQUEST_ID_HEADER, requestId)
                     .accept(MediaType.APPLICATION_JSON);
             if (body != null) {
-                request.contentType(MediaType.APPLICATION_JSON).body(body);
+                request.contentType(contentType).body(body);
             }
             response = request.retrieve().body(responseType);
         } catch (RestClientResponseException ex) {

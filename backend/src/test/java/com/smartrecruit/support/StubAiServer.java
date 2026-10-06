@@ -24,7 +24,7 @@ public final class StubAiServer implements AutoCloseable {
     private volatile String body = "{}";
     private volatile long delayMs;
     private volatile HttpExchange lastExchange;
-    private volatile String lastBody;
+    private volatile byte[] lastBody;
 
     private StubAiServer() {
         try {
@@ -84,6 +84,10 @@ public final class StubAiServer implements AutoCloseable {
     }
 
     public String lastBody() {
+        return lastBody == null ? null : new String(lastBody, StandardCharsets.UTF_8);
+    }
+
+    public byte[] lastBodyBytes() {
         return lastBody;
     }
 
@@ -95,7 +99,7 @@ public final class StubAiServer implements AutoCloseable {
 
     private void handle(HttpExchange exchange) throws IOException {
         requestCount.incrementAndGet();
-        lastBody = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        lastBody = exchange.getRequestBody().readAllBytes();
         lastExchange = exchange;
         try {
             if (delayMs > 0) {

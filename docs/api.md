@@ -32,6 +32,31 @@ Toutes ces routes renvoient le profil complet mis à jour. `educationLevel` ∈ 
 Expérience : `startDate` obligatoire et non future ; `endDate` absente = poste actuel (`current: true`) ;
 fin avant début → 400.
 
+## CV du candidat (`CANDIDAT`)
+
+Le candidat ne gère que **son** CV (retrouvé grâce au jeton, aucun identifiant dans l'URL). Analyse par le
+service IA (CV Parser) : méthode, stockage et limites dans [ai/cv-parser.md](ai/cv-parser.md).
+
+| Méthode | Chemin | Corps | Réponse |
+|---|---|---|---|
+| GET | `/api/candidate/cv` | — | CV + analyse ; 404 si aucun CV |
+| POST | `/api/candidate/cv` | multipart, champ `file` (PDF ≤ `MAX_CV_SIZE_MB`) | import ou remplacement, puis analyse |
+| POST | `/api/candidate/cv/analyze` | — | relance l'analyse du CV enregistré (après une panne du service IA) |
+| POST | `/api/candidate/cv/import` | `{skills, educations, experiences}` (booléens, `true` par défaut) | ajoute les éléments extraits au profil : `{skillsAdded, educationsAdded, experiencesAdded, skipped, educationLevelSet, yearsOfExperienceSet, profile}` |
+| DELETE | `/api/candidate/cv` | — | 204 ; supprime aussi le fichier |
+
+Réponse CV : `{id, originalFileName, fileSize, parsingStatus (TERMINE | ECHEC), parsingError, parsedAt, updatedAt, analysis}`
+— `analysis` = résultat validé du parser (compétences, technologies, formations, expériences, langues, synthèse),
+sans le texte du CV.
+
+- Le fichier est contrôlé **par son contenu** (signature `%PDF-`) : le nom et le type MIME envoyés sont ignorés.
+  Vide → 400 ; pas un PDF → 400 ; trop volumineux → 413 ; PDF endommagé, chiffré, scanné ou sans texte → 422
+  (message du parser ; un CV déjà présent est conservé).
+- Service IA arrêté, trop lent ou réponse invalide : le CV est enregistré avec `parsingStatus: ECHEC` et un message ;
+  `POST /analyze` relance l'analyse. L'import dans le profil exige une analyse `TERMINE` (sinon 400).
+- Import : formations sans établissement et expériences sans entreprise ou date de début ignorées (`skipped`),
+  doublons ignorés, 50 compétences maximum ; niveau d'études et années d'expérience remplis seulement s'ils sont vides.
+
 ## Profil et entreprise du recruteur (`RECRUTEUR`)
 
 | Méthode | Chemin | Corps |
@@ -111,3 +136,5 @@ Le candidat voit immédiatement le nouveau statut. Le score de matching sera ajo
   validations, rôles, appartenance (404), recherche/filtres/pagination, cascades de suppression.
 - `scripts/e2e-step5.ps1` : scénario complet sur le backend lancé avec MySQL (41 vérifications)
   — `powershell -ExecutionPolicy Bypass -File scripts/e2e-step5.ps1 -BaseUrl http://localhost:8080`.
+- CV : `CandidateCvApiTest` (12), `CvFileValidatorTest` (13) ; `scripts/e2e-step8.ps1` : parcours réel
+  Spring Boot → FastAPI → MySQL (47 vérifications, service IA arrêté au départ : le script le lance lui-même).

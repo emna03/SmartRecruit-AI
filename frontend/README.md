@@ -26,8 +26,10 @@ npm test             # tests unitaires (Vitest) : services, intercepteur, guards
 npm run e2e          # parcours complet Angular -> Spring Boot -> MySQL (Playwright + Microsoft Edge)
 ```
 
-Le test e2e nécessite MySQL et le backend démarrés (le serveur Angular est lancé automatiquement s'il ne tourne pas).
-Il crée des comptes `e2e6-*@test.local` et une entreprise `E2E6 *`, puis les supprime via l'API admin
+Le test e2e nécessite MySQL et le backend démarrés (le serveur Angular est lancé automatiquement s'il ne tourne pas) ;
+`cv-flow.e2e.ts` (import et analyse d'un CV PDF fictif) nécessite aussi le service IA FastAPI démarré, et vérifie
+les données enregistrées directement dans MySQL (conteneur `smartrecruit-mysql`).
+Il crée des comptes `e2e6-*` / `e2e8-*@test.local` et une entreprise `E2E6 *`, puis les supprime via l'API admin
 (identifiants lus dans `../.env`). `E2E_KEEP_DATA=1` conserve les données pour les inspecter dans MySQL.
 Captures d'écran : `e2e/screenshots/` (non versionné).
 
@@ -37,12 +39,12 @@ Captures d'écran : `e2e/screenshots/` (non versionné).
 |---|---|
 | `core/models` | Interfaces TypeScript calquées sur les DTO du backend, libellés français des énumérations |
 | `core/auth` | `AuthService` (session JWT en signals + localStorage), `authInterceptor`, `roleGuard` / `guestGuard` |
-| `core/services` | Un service par domaine d'API : offres, profil candidat, recruteur/entreprise, candidatures, compétences, admin, notifications |
+| `core/services` | Un service par domaine d'API : offres, profil candidat, CV, recruteur/entreprise, candidatures, compétences, admin, notifications |
 | `core/http-errors.ts` | Message lisible depuis l'`ApiError` du backend, report des `fieldErrors` sur les formulaires |
 | `shared` | Composants réutilisables : erreurs de champ, chargement, badge de statut, pagination, saisie de compétences, carte d'offre, notifications, validateurs |
 | `layout` | Barre de navigation, pied de page, mise en page des espaces (barre latérale) |
 | `features/public` | Accueil, connexion, inscription, liste et détail des offres, 404 |
-| `features/candidate` | Tableau de bord, profil (infos, compétences, formations, expériences), offres, candidatures |
+| `features/candidate` | Tableau de bord, profil (infos, compétences, formations, expériences), CV (import PDF, analyse IA, ajout au profil), offres, candidatures |
 | `features/recruiter` | Tableau de bord, entreprise & profil, offres (liste, création, modification), candidats d'une offre, détail d'une candidature |
 | `features/admin` | Espace minimal : statistiques, utilisateurs, entreprises, offres |
 

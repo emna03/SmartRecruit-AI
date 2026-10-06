@@ -6,7 +6,7 @@ Application web de recrutement : les entreprises publient des offres, les candid
 et un module d'IA analyse les CV, calcule un score de compatibilité explicable avec les offres
 et répond aux questions via un chatbot RH.
 
-> **État du projet : ÉTAPES 1 (architecture), 2 (MySQL + Spring Boot), 3 (entités JPA), 4 (JWT + rôles), 5 (profils, entreprises, offres, candidatures), 6 (frontend Angular connecté au backend) et 7 (socle du service IA FastAPI relié à Spring Boot) terminées.** Ce README sera complété à l'étape 14.
+> **État du projet : ÉTAPES 1 (architecture), 2 (MySQL + Spring Boot), 3 (entités JPA), 4 (JWT + rôles), 5 (profils, entreprises, offres, candidatures), 6 (frontend Angular connecté au backend), 7 (socle du service IA FastAPI relié à Spring Boot) et 8 (CV Parser + NLP : import d'un CV PDF et extraction automatique des compétences, formations, expériences et langues) terminées.** Ce README sera complété à l'étape 14.
 
 ## Démarrage rapide (provisoire)
 
@@ -41,7 +41,8 @@ Angular (4200) ──REST/JWT──> Spring Boot (8080) ──> MySQL (3306)
 
 Détails : [docs/architecture.md](docs/architecture.md) — Modèle de données : [docs/database.md](docs/database.md)
 — Sécurité et endpoints d'authentification : [docs/security.md](docs/security.md)
-— API métier (profils, entreprises, offres, candidatures) : [docs/api.md](docs/api.md)
+— API métier (profils, entreprises, offres, candidatures, CV) : [docs/api.md](docs/api.md)
+— Module IA CV Parser (méthode, bibliothèques, évaluation, limites) : [docs/ai/cv-parser.md](docs/ai/cv-parser.md)
 
 ## Arborescence
 

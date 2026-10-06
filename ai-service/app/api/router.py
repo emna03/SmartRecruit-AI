@@ -7,7 +7,7 @@
 
 from fastapi import APIRouter, Depends
 
-from app.api.routes import health, status
+from app.api.routes import cv, health, status
 from app.core.security import require_internal_key
 from app.schemas.common import ApiErrorResponse
 
@@ -20,3 +20,4 @@ internal_router = APIRouter(
     responses={401: {"model": ApiErrorResponse, "description": "Clé d'API interne manquante ou invalide"}},
 )
 internal_router.include_router(status.router)
+internal_router.include_router(cv.router)

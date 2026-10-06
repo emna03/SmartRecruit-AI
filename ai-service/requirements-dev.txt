@@ -3,3 +3,5 @@
 pytest==9.1.1
 # Client HTTP du TestClient de Starlette 1.x (remplace httpx, déprécié pour cet usage)
 httpx2==2.13.1
+# Génération des CV PDF fictifs de test (tests/fixtures/cv/generate_fixtures.py)
+reportlab==5.0.1

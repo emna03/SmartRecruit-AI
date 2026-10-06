@@ -4,6 +4,7 @@ import com.smartrecruit.candidate.repository.CandidateProfileRepository;
 import com.smartrecruit.common.exception.BadRequestException;
 import com.smartrecruit.recruiter.repository.RecruiterProfileRepository;
 import com.smartrecruit.common.exception.ResourceNotFoundException;
+import com.smartrecruit.cv.service.CvStorage;
 import com.smartrecruit.user.dto.UserResponse;
 import com.smartrecruit.user.entity.RoleName;
 import com.smartrecruit.user.entity.User;
@@ -12,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 
@@ -22,6 +25,7 @@ public class UserAdminService {
     private final UserRepository userRepository;
     private final CandidateProfileRepository candidateProfileRepository;
     private final RecruiterProfileRepository recruiterProfileRepository;
+    private final CvStorage cvStorage;
 
     @Transactional(readOnly = true)
     public List<UserResponse> findAll(RoleName role) {
@@ -49,6 +53,7 @@ public class UserAdminService {
     /**
      * Supprime le compte et son profil. Le profil candidat entraîne avec lui CV, formations,
      * expériences et candidatures (cascade JPA) ; les scores sont supprimés par la base (ON DELETE CASCADE).
+     * Le fichier du CV (donnée personnelle) est effacé du disque une fois la suppression validée.
      */
     @Transactional
     public void delete(Long id, Long currentAdminId) {
@@ -56,7 +61,18 @@ public class UserAdminService {
             throw new BadRequestException("Un administrateur ne peut pas supprimer son propre compte");
         }
         User user = getUser(id);
-        candidateProfileRepository.findByUserId(id).ifPresent(candidateProfileRepository::delete);
+        candidateProfileRepository.findByUserId(id).ifPresent(profile -> {
+            if (profile.getCv() != null) {
+                String storedFileName = profile.getCv().getStoredFileName();
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        cvStorage.delete(storedFileName);
+                    }
+                });
+            }
+            candidateProfileRepository.delete(profile);
+        });
         recruiterProfileRepository.findByUserId(id).ifPresent(recruiterProfileRepository::delete);
         userRepository.delete(user);
     }

@@ -15,6 +15,11 @@ export default [
     title: 'Mon profil — Espace candidat',
   },
   {
+    path: 'cv',
+    loadComponent: () => import('./cv/candidate-cv-page').then((m) => m.CandidateCvPage),
+    title: 'Mon CV — Espace candidat',
+  },
+  {
     path: 'jobs',
     component: JobListPage,
     data: { detailBase: '/candidate/jobs', embedded: true },

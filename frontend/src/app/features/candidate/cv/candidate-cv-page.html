@@ -1,0 +1,326 @@
+<h1 class="page-title">Mon CV</h1>
+<p class="page-subtitle">
+  Importez votre CV au format PDF : il est analysé automatiquement pour en extraire vos compétences, formations,
+  expériences et langues.
+</p>
+
+@if (loading()) {
+  <app-loading-spinner label="Chargement de votre CV..." />
+} @else if (loadError()) {
+  <div class="alert alert-danger">{{ loadError() }}</div>
+} @else {
+  <input #fileInput type="file" class="d-none" accept="application/pdf,.pdf" (change)="onFileSelected($event)"
+         data-testid="cv-file-input" />
+
+  <!-- Fichier actuel / zone d'import -->
+  <div class="card mb-4">
+    <div class="card-header bg-white section-title">
+      <i aria-hidden="true" class="bi bi-file-earmark-pdf me-2 text-primary"></i>Fichier
+    </div>
+    <div class="card-body">
+      @if (analyzing()) {
+        <div class="analyzing p-4 text-center" role="status" data-testid="cv-analyzing">
+          <div class="spinner-border text-primary mb-2"></div>
+          <div class="fw-semibold">Analyse en cours…</div>
+          <div class="small text-secondary">
+            Extraction du texte, détection des sections, des compétences, des formations, des expériences et des langues.
+          </div>
+        </div>
+      } @else if (cv(); as current) {
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3" data-testid="cv-file">
+          <div class="d-flex align-items-center gap-3">
+            <i aria-hidden="true" class="bi bi-file-earmark-pdf-fill text-danger fs-2"></i>
+            <div>
+              <div class="fw-semibold text-break">{{ current.originalFileName }}</div>
+              <div class="small text-secondary">
+                {{ current.fileSize / 1024 | number: '1.0-0' }} Ko
+                @if (current.updatedAt) {
+                  · mis à jour le {{ current.updatedAt | date: 'dd/MM/yyyy à HH:mm' }}
+                }
+              </div>
+            </div>
+            @switch (current.parsingStatus) {
+              @case ('TERMINE') {
+                <span class="badge text-bg-success" data-testid="cv-status"><i aria-hidden="true" class="bi bi-check-circle me-1"></i>CV analysé</span>
+              }
+              @case ('ECHEC') {
+                <span class="badge text-bg-warning" data-testid="cv-status"><i aria-hidden="true" class="bi bi-exclamation-triangle me-1"></i>Analyse non effectuée</span>
+              }
+              @default {
+                <span class="badge text-bg-secondary" data-testid="cv-status">En cours</span>
+              }
+            }
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-outline-primary btn-sm" type="button" (click)="fileInput.click()" [disabled]="busy()" data-testid="cv-replace">
+              <i aria-hidden="true" class="bi bi-arrow-repeat me-1"></i>Remplacer
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" type="button" (click)="reanalyze()" [disabled]="busy()" data-testid="cv-reanalyze">
+              <i aria-hidden="true" class="bi bi-cpu me-1"></i>Relancer l'analyse
+            </button>
+            @if (confirmDelete()) {
+              <button class="btn btn-danger btn-sm" type="button" (click)="remove()" [disabled]="busy()" data-testid="cv-delete-confirm">
+                @if (deleting()) {
+                  <span class="spinner-border spinner-border-sm me-1"></span>
+                }
+                Confirmer la suppression
+              </button>
+              <button class="btn btn-outline-secondary btn-sm" type="button" (click)="confirmDelete.set(false)">Annuler</button>
+            } @else {
+              <button class="btn btn-outline-danger btn-sm" type="button" (click)="confirmDelete.set(true)" [disabled]="busy()" data-testid="cv-delete">
+                <i aria-hidden="true" class="bi bi-trash me-1"></i>Supprimer
+              </button>
+            }
+          </div>
+        </div>
+      } @else {
+        <div class="dropzone" [class.over]="dragOver()" role="button" tabindex="0" data-testid="cv-dropzone"
+             (click)="fileInput.click()" (keydown.enter)="fileInput.click()" (keydown.space)="fileInput.click()"
+             (dragover)="onDragOver($event)" (dragleave)="dragOver.set(false)" (drop)="onDrop($event)">
+          <i aria-hidden="true" class="bi bi-cloud-arrow-up d-block mb-2"></i>
+          <div class="fw-semibold">Glissez votre CV ici ou cliquez pour choisir un fichier</div>
+          <div class="small text-secondary mt-1">
+            PDF uniquement, {{ maxSizeMb }} Mo maximum. Le texte doit être sélectionnable (un CV scanné ne peut pas être analysé).
+          </div>
+        </div>
+      }
+
+      @if (uploadError()) {
+        <div class="alert alert-danger mt-3 mb-0 d-flex gap-2" role="alert" data-testid="cv-error">
+          <i aria-hidden="true" class="bi bi-x-octagon"></i><span>{{ uploadError() }}</span>
+        </div>
+      }
+      @if (!analyzing() && cv()?.parsingStatus === 'ECHEC') {
+        <div class="alert alert-warning mt-3 mb-0" role="alert" data-testid="cv-parsing-error">
+          <div class="fw-semibold mb-1">Votre CV est enregistré mais n'a pas pu être analysé.</div>
+          <div class="small">{{ cv()?.parsingError }}</div>
+          <button class="btn btn-warning btn-sm mt-2" type="button" (click)="reanalyze()" [disabled]="busy()">
+            <i aria-hidden="true" class="bi bi-arrow-clockwise me-1"></i>Réessayer l'analyse
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (!analyzing() && analysis(); as a) {
+    <!-- Synthèse -->
+    <div class="row g-3 mb-4" data-testid="cv-summary">
+      <div class="col-6 col-md-3">
+        <div class="card stat-card h-100"><div class="card-body">
+          <div class="stat-value">{{ a.technologies.length }}</div><div class="stat-label">Technologies</div>
+        </div></div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card stat-card h-100"><div class="card-body">
+          <div class="stat-value">{{ a.skills.length }}</div><div class="stat-label">Compétences</div>
+        </div></div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card stat-card h-100"><div class="card-body">
+          <div class="stat-value fs-5">{{ a.totalExperienceMonths !== null ? formatDuration(a.totalExperienceMonths) : '—' }}</div>
+          <div class="stat-label">Expérience cumulée</div>
+        </div></div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card stat-card h-100"><div class="card-body">
+          <div class="stat-value fs-5">{{ a.highestEducationLevel ? educationLabels[a.highestEducationLevel] : '—' }}</div>
+          <div class="stat-label">Niveau d'études</div>
+        </div></div>
+      </div>
+    </div>
+
+    @if (a.warnings.length) {
+      <div class="alert alert-info small" data-testid="cv-warnings">
+        <i aria-hidden="true" class="bi bi-info-circle me-1"></i>
+        @for (w of a.warnings; track w) {
+          <div>{{ w }}</div>
+        }
+      </div>
+    }
+
+    <!-- Compétences -->
+    <div class="card mb-4" data-testid="cv-skills">
+      <div class="card-header bg-white section-title">
+        <i aria-hidden="true" class="bi bi-lightning-charge me-2 text-primary"></i>Compétences détectées
+      </div>
+      <div class="card-body">
+        @if (a.technologies.length === 0 && a.skills.length === 0) {
+          <p class="text-secondary small mb-0">Aucune technologie ni compétence reconnue dans ce CV.</p>
+        }
+        <div class="row g-3">
+          @for (group of technologyGroups(); track group.category) {
+            <div class="col-md-6">
+              <div class="category-label mb-1">{{ group.category }}</div>
+              @for (s of group.items; track s.name) {
+                <span class="skill-badge tech" [title]="s.occurrences + ' occurrence(s) dans le CV'">{{ s.name }}</span>
+              }
+            </div>
+          }
+        </div>
+        @if (a.skills.length) {
+          <hr />
+          <div class="row g-3">
+            @for (group of skillGroups(); track group.category) {
+              <div class="col-md-6">
+                <div class="category-label mb-1">{{ group.category }}</div>
+                @for (s of group.items; track s.name) {
+                  <span class="skill-badge" [title]="s.occurrences + ' occurrence(s) dans le CV'">{{ s.name }}</span>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <!-- Formation -->
+      <div class="col-lg-6">
+        <div class="card h-100" data-testid="cv-educations">
+          <div class="card-header bg-white section-title"><i aria-hidden="true" class="bi bi-mortarboard me-2 text-primary"></i>Formation</div>
+          <div class="card-body">
+            @for (e of a.educations; track $index) {
+              <div class="timeline-item py-2">
+                <div class="fw-semibold">{{ e.degree }}</div>
+                <div class="small text-secondary">
+                  {{ e.institution ?? 'Établissement non détecté' }}
+                  @if (e.startDate || e.endDate) {
+                    · {{ e.startDate ? formatDate(e.startDate) + ' – ' : '' }}{{ formatDate(e.endDate) }}
+                  }
+                </div>
+                @if (e.level) {
+                  <span class="badge text-bg-light border mt-1">{{ educationLabels[e.level] }}</span>
+                }
+              </div>
+            } @empty {
+              <p class="text-secondary small mb-0">Aucune formation détectée.</p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Langues -->
+      <div class="col-lg-6">
+        <div class="card h-100" data-testid="cv-languages">
+          <div class="card-header bg-white section-title"><i aria-hidden="true" class="bi bi-translate me-2 text-primary"></i>Langues</div>
+          <div class="card-body">
+            @for (l of a.languages; track l.name) {
+              <div class="d-flex justify-content-between align-items-center py-1" [class.border-top]="!$first">
+                <span class="fw-semibold">{{ l.name }}</span>
+                <span class="small text-secondary text-end">
+                  {{ l.level ? languageLabels[l.level] : '' }}
+                  @if (l.cefr) {
+                    <span class="badge text-bg-light border ms-1">{{ l.cefr }}</span>
+                  }
+                  @if (l.certification) {
+                    <span class="badge text-bg-light border ms-1">{{ l.certification }}</span>
+                  }
+                  @if (!l.level && !l.cefr && !l.certification) {
+                    Niveau non précisé
+                  }
+                </span>
+              </div>
+            } @empty {
+              <p class="text-secondary small mb-0">Aucune langue détectée.</p>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expérience -->
+    <div class="card mb-4" data-testid="cv-experiences">
+      <div class="card-header bg-white section-title"><i aria-hidden="true" class="bi bi-briefcase me-2 text-primary"></i>Expérience</div>
+      <div class="card-body">
+        @for (x of a.experiences; track $index) {
+          <div class="timeline-item py-2">
+            <div class="d-flex flex-wrap justify-content-between gap-2">
+              <div>
+                <div class="fw-semibold">{{ x.jobTitle }}</div>
+                <div class="small text-secondary">
+                  {{ x.company ?? 'Entreprise non détectée' }}@if (x.location) { · {{ x.location }} }
+                </div>
+              </div>
+              <div class="small text-secondary text-end">
+                @if (x.startDate) {
+                  {{ formatDate(x.startDate) }} – {{ x.current ? 'aujourd’hui' : formatDate(x.endDate) }}
+                }
+                @if (x.durationMonths !== null) {
+                  <div>{{ formatDuration(x.durationMonths) }}</div>
+                }
+              </div>
+            </div>
+            @if (x.description) {
+              <div class="small mt-1 text-pre-line">{{ x.description }}</div>
+            }
+          </div>
+        } @empty {
+          <p class="text-secondary small mb-0">Aucune expérience détectée.</p>
+        }
+      </div>
+    </div>
+
+    <!-- Ajout au profil -->
+    <div class="card mb-4" data-testid="cv-import">
+      <div class="card-header bg-white section-title"><i aria-hidden="true" class="bi bi-person-check me-2 text-primary"></i>Compléter mon profil</div>
+      <div class="card-body">
+        <p class="small text-secondary">
+          Ajoutez les informations extraites à votre profil. Seules les entrées complètes sont reprises et les doublons
+          sont ignorés ; vous pourrez tout modifier ensuite depuis <a routerLink="/candidate/profile">Mon profil</a>.
+        </p>
+        <div class="d-flex flex-wrap gap-3 mb-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="import-skills" [checked]="importSkills()" (change)="importSkills.set(!importSkills())" />
+            <label class="form-check-label" for="import-skills">Compétences et technologies</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="import-educations" [checked]="importEducations()" (change)="importEducations.set(!importEducations())" />
+            <label class="form-check-label" for="import-educations">Formations</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="import-experiences" [checked]="importExperiences()" (change)="importExperiences.set(!importExperiences())" />
+            <label class="form-check-label" for="import-experiences">Expériences</label>
+          </div>
+        </div>
+        <button class="btn btn-primary" type="button" (click)="importIntoProfile()"
+                [disabled]="busy() || !(importSkills() || importEducations() || importExperiences())" data-testid="cv-import-button">
+          @if (importing()) {
+            <span class="spinner-border spinner-border-sm me-1"></span>
+          }
+          Ajouter au profil
+        </button>
+        @if (importResult(); as r) {
+          <div class="alert alert-success small mt-3 mb-0" data-testid="cv-import-result">
+            {{ r.skillsAdded }} compétence(s), {{ r.educationsAdded }} formation(s) et {{ r.experiencesAdded }} expérience(s)
+            ajoutée(s) à votre profil.
+            @if (r.skipped) {
+              {{ r.skipped }} élément(s) ignoré(s) (déjà présents ou incomplets).
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Méthode -->
+    <div class="card border-0 bg-primary-soft mb-2" data-testid="cv-method">
+      <div class="card-body small">
+        <div class="fw-semibold mb-1"><i aria-hidden="true" class="bi bi-cpu me-1"></i>Comment ce CV a-t-il été analysé ?</div>
+        <p class="mb-2">{{ a.method }}</p>
+        <div class="text-secondary">
+          Parser v{{ a.parserVersion }} · {{ a.pageCount }} page(s) · langue du document : {{ documentLanguageLabels[a.documentLanguage] }}
+          · analysé en {{ a.processingTimeMs }} ms
+          @if (a.sectionsDetected.length) {
+            · sections détectées :
+            @for (s of a.sectionsDetected; track s; let last = $last) {
+              {{ sectionLabels[s] ?? s }}{{ last ? '' : ', ' }}
+            }
+          }
+        </div>
+        <div class="text-secondary mt-1">
+          Aucun modèle de langage (LLM) n'est utilisé. Vos coordonnées (email, téléphone, liens) sont masquées avant
+          enregistrement du texte.
+        </div>
+      </div>
+    </div>
+  }
+}

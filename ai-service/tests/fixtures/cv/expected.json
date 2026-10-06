@@ -1,0 +1,73 @@
+{
+  "_comment": "Vérité terrain annotée à la main à partir du contenu des CV fictifs (pas à partir de la sortie du parser). Date de référence pour les durées « à ce jour ».",
+  "referenceDate": "2026-10-06",
+  "parsed": {
+    "cv_dev_fullstack_fr.pdf": {
+      "documentLanguage": "fr",
+      "technologies": ["Java", "Spring Boot", "Spring Security", "Hibernate", "Angular", "TypeScript", "JavaScript",
+        "SQL", "HTML", "CSS", "Bootstrap", "MySQL", "PostgreSQL", "MongoDB", "Git", "GitHub", "Docker", "Jenkins",
+        "Maven", "Postman", "JUnit", "Mockito", "JWT", "Jira"],
+      "skills": ["API REST", "Développement full stack", "Développement web", "Tests unitaires", "CI/CD", "Agile",
+        "Scrum", "UML", "Programmation orientée objet"],
+      "educations": [
+        {"level": "BAC_PLUS_5", "institution": "École Supérieure Fictive d'Ingénieurs", "startDate": "2019", "endDate": "2022"},
+        {"level": "BAC_PLUS_3", "institution": "Université Exemple de Tunis", "startDate": "2016", "endDate": "2019"}
+      ],
+      "experiences": [
+        {"jobTitle": "Développeuse Full Stack", "company": "Société Exemple", "startDate": "2023-03", "endDate": null, "current": true},
+        {"jobTitle": "Stagiaire développeuse", "company": "Entreprise Démo", "startDate": "2022-02", "endDate": "2022-07", "current": false}
+      ],
+      "languages": [
+        {"name": "Français", "level": "NATIF"},
+        {"name": "Anglais", "level": "COURANT"},
+        {"name": "Allemand", "level": "DEBUTANT"}
+      ],
+      "highestEducationLevel": "BAC_PLUS_5",
+      "totalExperienceMonths": 50
+    },
+    "cv_data_scientist_en.pdf": {
+      "documentLanguage": "en",
+      "technologies": ["Python", "spaCy", "scikit-learn", "FastAPI", "Docker", "AWS", "Power BI", "pandas", "NumPy",
+        "SQL", "PostgreSQL", "TensorFlow", "PyTorch", "Git"],
+      "skills": ["Machine Learning", "NLP", "API REST", "Data visualisation", "Analyse de données", "Deep Learning",
+        "Statistiques", "Data Science"],
+      "educations": [
+        {"level": "BAC_PLUS_5", "institution": "Example University", "startDate": "2018", "endDate": "2020"},
+        {"level": "BAC_PLUS_3", "institution": "Sample Institute of Technology", "startDate": "2015", "endDate": "2018"}
+      ],
+      "experiences": [
+        {"jobTitle": "Data Scientist", "company": "Sample Analytics Ltd", "startDate": "2021-01", "endDate": null, "current": true},
+        {"jobTitle": "Data Analyst Intern", "company": "Demo Corp", "startDate": "2020-06", "endDate": "2020-12", "current": false}
+      ],
+      "languages": [
+        {"name": "Anglais", "level": "NATIF"},
+        {"name": "Français", "level": null},
+        {"name": "Espagnol", "level": "INTERMEDIAIRE"}
+      ],
+      "highestEducationLevel": "BAC_PLUS_5",
+      "totalExperienceMonths": 77
+    },
+    "cv_minimal_fr.pdf": {
+      "documentLanguage": "fr",
+      "technologies": ["PHP", "Laravel", "MySQL", "JavaScript"],
+      "skills": ["Développement web"],
+      "educations": [
+        {"level": "BAC_PLUS_3", "institution": "ISET Exemple", "startDate": null, "endDate": "2024"}
+      ],
+      "experiences": [],
+      "languages": [
+        {"name": "Français", "level": null},
+        {"name": "Anglais", "level": "INTERMEDIAIRE"}
+      ],
+      "highestEducationLevel": "BAC_PLUS_3",
+      "totalExperienceMonths": null
+    }
+  },
+  "rejected": {
+    "cv_blank.pdf": "NO_TEXT",
+    "cv_image_only.pdf": "NO_TEXT",
+    "cv_encrypted.pdf": "ENCRYPTED_PDF",
+    "cv_corrupted.pdf": "INVALID_PDF",
+    "not_a_pdf.pdf": "INVALID_PDF"
+  }
+}

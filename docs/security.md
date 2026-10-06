@@ -59,7 +59,9 @@ Toutes les erreurs ont le même format JSON :
 | 403 | rôle insuffisant ; compte désactivé |
 | 404 | ressource introuvable ou appartenant à un autre utilisateur |
 | 409 | email déjà utilisé, nom d'entreprise déjà pris, candidature déjà envoyée |
-| 422 | données refusées par le service IA (message du service IA) |
+| 413 | fichier trop volumineux (CV > `MAX_CV_SIZE_MB`) |
+| 415 | type de contenu non accepté |
+| 422 | données refusées par le service IA (message du service IA, ex. PDF sans texte exploitable) |
 | 503 | service IA arrêté, trop lent (`AI_TIMEOUT_SECONDS`), clé interne refusée, erreur ou réponse invalide du service IA |
 
 ## Communication interne Spring Boot → FastAPI
@@ -78,6 +80,20 @@ Toutes les erreurs ont le même format JSON :
   (`X-Request-Id`), jamais la clé ni le contenu échangé (données personnelles des CV).
 - Vérification : `GET /api/admin/ai/status` (ADMIN) ; tests `AiServiceClientTest`, `AiAdminApiTest`,
   `ai-service/tests/` et `scripts/e2e-step7.ps1`.
+
+## CV et données personnelles
+
+- Upload réservé au rôle `CANDIDAT`, sur son propre CV uniquement (pas d'identifiant de CV dans l'URL).
+- **Aucune confiance dans le navigateur** : le nom et le type MIME envoyés sont ignorés ; le fichier doit être
+  non vide, ≤ `MAX_CV_SIZE_MB` et commencer par la signature `%PDF-`. Il est stocké sous un nom aléatoire
+  (`<uuid>.pdf`) dans `UPLOAD_DIR/cvs` (ignoré par Git), hors de toute URL publique ; le nom d'origine,
+  nettoyé (chemins et caractères spéciaux retirés), sert seulement à l'affichage.
+- Le CV n'est transmis qu'au service IA interne (clé `X-Internal-Api-Key`), jamais à un LLM ni à un tiers.
+- Le résultat du parser est validé par Pydantic puis par Bean Validation avant tout enregistrement ;
+  le texte conservé en base est masqué (emails, liens, téléphones) et n'est jamais renvoyé au navigateur.
+- Journaux : identifiant utilisateur, tailles, compteurs et codes d'erreur uniquement — jamais le contenu,
+  le nom du fichier ni une donnée personnelle du CV.
+- Suppression du CV ou du compte (admin) : la ligne et le fichier disque sont supprimés.
 
 ## Mesures de protection
 

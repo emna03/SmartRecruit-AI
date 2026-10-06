@@ -179,7 +179,7 @@ test('E5 un candidat s’inscrit depuis l’offre, complète son profil et postu
   await page.goto('/recruiter/dashboard');
   await expect(page).toHaveURL(/\/candidate\/dashboard$/);
 
-  await page.getByRole('link', { name: 'Mon profil' }).click();
+  await page.getByRole('link', { name: 'Mon profil', exact: true }).click();
   await page.getByLabel('Titre du profil').fill('Développeuse Angular / Spring Boot');
   await page.getByLabel('Téléphone').fill('abc');
   await page.getByTestId('save-profile').click();

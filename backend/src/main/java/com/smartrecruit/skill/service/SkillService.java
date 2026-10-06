@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -42,6 +43,29 @@ public class SkillService {
             skills.add(skillRepository.findByNameIgnoreCase(name)
                     .orElseGet(() -> skillRepository.save(new Skill(name, null))));
         }
+        return skills;
+    }
+
+    /**
+     * Compétences détectées automatiquement (nom -> catégorie du lexique) : rattachées au référentiel sans tenir
+     * compte de la casse, créées avec leur catégorie, ou complétées si la catégorie existante est vide.
+     */
+    @Transactional
+    public Set<Skill> resolveCategorized(Map<String, String> categoriesByName) {
+        Set<Skill> skills = new LinkedHashSet<>();
+        Set<String> seen = new HashSet<>();
+        categoriesByName.forEach((raw, category) -> {
+            String name = normalize(raw);
+            if (name.isEmpty() || !seen.add(name.toLowerCase(Locale.ROOT))) {
+                return;
+            }
+            Skill skill = skillRepository.findByNameIgnoreCase(name)
+                    .orElseGet(() -> skillRepository.save(new Skill(name, category)));
+            if (skill.getCategory() == null && category != null) {
+                skill.setCategory(category);
+            }
+            skills.add(skill);
+        });
         return skills;
     }
 

@@ -1,0 +1,42 @@
+{
+  "parserVersion": "1.0.0",
+  "method": "Extraction pdfplumber ; lexique ; règles. Déterministe, sans LLM.",
+  "documentLanguage": "fr",
+  "pageCount": 1,
+  "textLength": 1415,
+  "sectionsDetected": ["profil", "experience", "formation", "competences", "langues"],
+  "skills": [
+    {"name": "API REST", "category": "Développement", "occurrences": 3},
+    {"name": "Scrum", "category": "Méthodologie", "occurrences": 2}
+  ],
+  "technologies": [
+    {"name": "Java", "category": "Langage", "occurrences": 3},
+    {"name": "Spring Boot", "category": "Framework back-end", "occurrences": 3},
+    {"name": "Angular", "category": "Framework front-end", "occurrences": 2},
+    {"name": "MySQL", "category": "Base de données", "occurrences": 1}
+  ],
+  "educations": [
+    {"degree": "Diplôme d'ingénieur en Génie Logiciel", "fieldOfStudy": "Génie Logiciel",
+     "institution": "École Supérieure Fictive", "startDate": "2019", "endDate": "2022", "level": "BAC_PLUS_5"},
+    {"degree": "Licence en Informatique", "fieldOfStudy": "Informatique", "institution": null,
+     "startDate": "2016", "endDate": "2019", "level": "BAC_PLUS_3"}
+  ],
+  "experiences": [
+    {"jobTitle": "Développeuse Full Stack", "company": "Société Exemple", "location": "Tunis",
+     "startDate": "2023-03", "endDate": null, "current": true, "durationMonths": 44,
+     "description": "API REST avec Java et Spring Boot."},
+    {"jobTitle": "Stagiaire développeuse", "company": "Entreprise Démo", "location": "Ariana",
+     "startDate": "2022-02", "endDate": "2022-07", "current": false, "durationMonths": 6, "description": null},
+    {"jobTitle": "Freelance", "company": null, "location": null,
+     "startDate": null, "endDate": "2021", "current": false, "durationMonths": null, "description": null}
+  ],
+  "languages": [
+    {"name": "Français", "level": "NATIF", "cefr": null, "certification": null},
+    {"name": "Anglais", "level": "COURANT", "cefr": "B2", "certification": "TOEIC 850"}
+  ],
+  "totalExperienceMonths": 50,
+  "highestEducationLevel": "BAC_PLUS_5",
+  "warnings": [],
+  "text": "Camille Exemple\n[email] | [téléphone] | Tunis\nPROFIL\nDéveloppeuse full stack",
+  "processingTimeMs": 25
+}

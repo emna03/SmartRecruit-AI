@@ -51,6 +51,7 @@ export class CandidateDashboardPage implements OnInit {
       return [];
     }
     return [
+      { label: 'CV importé', done: p.hasCv },
       { label: 'Titre du profil', done: !!p.headline },
       { label: 'Coordonnées (téléphone, ville)', done: !!p.phone && !!p.location },
       { label: 'Au moins 3 compétences', done: p.skills.length >= 3 },

@@ -35,6 +35,9 @@ class Settings(BaseSettings):
     ai_log_level: str = "info"
     # Swagger UI / OpenAPI désactivés par défaut (service interne).
     ai_docs_enabled: bool = False
+    # Même variable que Spring Boot (MAX_CV_SIZE_MB) : taille maximale d'un CV accepté.
+    max_cv_size_mb: int = Field(default=5, ge=1, le=20)
+    ai_cv_max_pages: int = Field(default=10, ge=1, le=50)
 
     @field_validator("ai_internal_api_key")
     @classmethod

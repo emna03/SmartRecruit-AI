@@ -19,33 +19,6 @@ $aiKey = Get-EnvValue "AI_INTERNAL_API_KEY"
 $aiPort = ([uri]$aiUrl).Port
 $keyHeader = "X-Internal-Api-Key"
 
-function Test-AiUp {
-    try { return (Invoke-WebRequest -UseBasicParsing "$aiUrl/health" -TimeoutSec 2).StatusCode -eq 200 } catch { return $false }
-}
-
-function Start-Ai([string]$KeyOverride = $null) {
-    if (Test-AiUp) { throw "Un service IA répond déjà sur $aiUrl : l'arrêter avant de lancer ce script." }
-    $env:PYTHONUTF8 = "1"
-    if ($KeyOverride) { $env:AI_INTERNAL_API_KEY = $KeyOverride }
-    try {
-        $process = Start-Process -FilePath $python -ArgumentList "-m", "app" -WorkingDirectory $aiDir `
-            -RedirectStandardError $aiLog -RedirectStandardOutput "$aiLog.out" -PassThru -WindowStyle Hidden
-    } finally {
-        Remove-Item Env:AI_INTERNAL_API_KEY -ErrorAction SilentlyContinue
-    }
-    for ($i = 0; $i -lt 40 -and -not $process.HasExited; $i++) {
-        if (Test-AiUp) { return $process }
-        Start-Sleep -Milliseconds 250
-    }
-    Stop-Ai $process
-    throw "Le service IA n'a pas démarré : $(Get-Content $aiLog -Raw -ErrorAction SilentlyContinue)"
-}
-
-function Stop-Ai($process) {
-    if ($process -and -not $process.HasExited) { taskkill /PID $process.Id /T /F 2>&1 | Out-Null }
-    for ($i = 0; $i -lt 20 -and (Test-AiUp); $i++) { Start-Sleep -Milliseconds 250 }
-}
-
 $adminToken = (Invoke-Api POST /api/auth/login @{ email = (Get-EnvValue "ADMIN_EMAIL"); password = (Get-EnvValue "ADMIN_PASSWORD") }).Json.accessToken
 $suffix = -join ((97..122) | Get-Random -Count 8 | ForEach-Object { [char]$_ })
 $candidate = Invoke-Api POST /api/auth/register @{ email = "e2e7-cand-$suffix@test.local"; password = "Passw0rd!"; firstName = "E2E7"; lastName = "Candidat"; role = "CANDIDAT" }
@@ -65,7 +38,8 @@ try {
     Assert-Check "GET /api/status avec la clé en Bearer (mauvais en-tête) -> 401" ($r.Code -eq 401)
     $r = Invoke-Api GET "$aiUrl/api/status" -Headers @{ $keyHeader = $aiKey }
     $modules = @($r.Json.modules.PSObject.Properties)
-    Assert-Check "GET /api/status avec la clé de .env -> 200, 4 modules non disponibles" ($r.Code -eq 200 -and $modules.Count -eq 4 -and -not ($modules.Value -contains $true))
+    $available = @($modules | Where-Object { $_.Value -eq $true } | ForEach-Object { $_.Name })
+    Assert-Check "GET /api/status avec la clé de .env -> 200, 4 modules (seul cv_parser disponible)" ($r.Code -eq 200 -and $modules.Count -eq 4 -and $available.Count -eq 1 -and $available[0] -eq "cv_parser")
     $r = Invoke-Api GET "$aiUrl/docs"
     Assert-Check "Documentation Swagger désactivée par défaut -> 404" ($r.Code -eq 404)
     $listen = @(Get-NetTCPConnection -LocalPort $aiPort -State Listen -ErrorAction SilentlyContinue)

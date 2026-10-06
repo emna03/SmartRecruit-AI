@@ -14,6 +14,7 @@ const CANDIDATE_SPACE: SpaceConfig = {
   links: [
     { path: '/candidate/dashboard', label: 'Tableau de bord', icon: 'bi-speedometer2' },
     { path: '/candidate/profile', label: 'Mon profil', icon: 'bi-person' },
+    { path: '/candidate/cv', label: 'Mon CV', icon: 'bi-file-earmark-person' },
     { path: '/candidate/jobs', label: 'Offres', icon: 'bi-search' },
     { path: '/candidate/applications', label: 'Mes candidatures', icon: 'bi-send' },
   ],

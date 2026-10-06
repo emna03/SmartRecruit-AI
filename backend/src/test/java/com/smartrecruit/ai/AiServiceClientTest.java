@@ -93,6 +93,20 @@ class AiServiceClientTest {
     }
 
     @Test
+    void postBinarySendsRawBytesWithTheirContentType() {
+        server.respond(200, STATUS_JSON);
+        byte[] pdf = {'%', 'P', 'D', 'F', '-', 0, (byte) 0xFF, '\n'};
+
+        client().postBinary("/api/cv/parse", pdf, org.springframework.http.MediaType.APPLICATION_PDF,
+                AiServiceStatus.class);
+
+        assertThat(server.lastPath()).isEqualTo("/api/cv/parse");
+        assertThat(server.lastHeader("Content-Type")).isEqualTo("application/pdf");
+        assertThat(server.lastBodyBytes()).isEqualTo(pdf);
+        assertThat(server.lastHeader(AiServiceClient.API_KEY_HEADER)).isEqualTo(KEY);
+    }
+
+    @Test
     void refusedKeyBecomesServiceUnavailable() {
         server.respond(401, """
                 {"status":401,"error":"Unauthorized","message":"Clé d'API interne manquante ou invalide"}

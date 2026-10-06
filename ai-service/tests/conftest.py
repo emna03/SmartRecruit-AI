@@ -13,7 +13,7 @@ TEST_KEY = "test-only-internal-key-0123456789"
 def isolated_environment(monkeypatch):
     """Les tests ne dépendent ni du fichier .env ni des variables AI_* de la machine."""
     for name in ("AI_INTERNAL_API_KEY", "AI_SERVICE_URL", "AI_SERVICE_HOST", "AI_SERVICE_PORT",
-                 "AI_LOG_LEVEL", "AI_DOCS_ENABLED"):
+                 "AI_LOG_LEVEL", "AI_DOCS_ENABLED", "MAX_CV_SIZE_MB", "AI_CV_MAX_PAGES"):
         monkeypatch.delenv(name, raising=False)
 
 
