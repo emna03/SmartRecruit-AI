@@ -1,0 +1,66 @@
+# ============================================================
+# SmartRecruit AI - .gitignore
+# ============================================================
+
+# ---------- Secrets & environnement (NE JAMAIS COMMITER) ----------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+application-local.yml
+application-local.properties
+application-secret*.yml
+
+# ---------- Données personnelles (CV uploadés) ----------
+uploads/
+**/uploads/
+storage/
+*.cv.pdf
+
+# ---------- Java / Spring Boot / Maven ----------
+backend/target/
+target/
+*.class
+*.log
+hs_err_pid*
+
+# ---------- Node / Angular ----------
+node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/coverage/
+npm-debug.log*
+yarn-error.log*
+
+# ---------- Python / FastAPI / ML ----------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+.ipynb_checkpoints/
+
+# Datasets et modèles entraînés (trop lourds / potentiellement sensibles)
+ai-service/ml/data/*
+!ai-service/ml/data/README.md
+!ai-service/ml/data/.gitkeep
+ai-service/ml/artifacts/*
+!ai-service/ml/artifacts/.gitkeep
+
+# ---------- IDE / OS ----------
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+desktop.ini
