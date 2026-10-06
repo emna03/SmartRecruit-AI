@@ -1,0 +1,81 @@
+@if (loading()) {
+  <app-loading-spinner />
+} @else if (error()) {
+  <div class="alert alert-danger">{{ error() }}</div>
+} @else if (profile(); as p) {
+  <h1 class="page-title">Bonjour {{ p.firstName }}</h1>
+  <p class="page-subtitle">Voici un résumé de votre activité.</p>
+
+  <div class="row g-3 mb-4">
+    @for (stat of stats(); track stat.label) {
+      <div class="col-6 col-md-4 col-xl">
+        <div class="card stat-card h-100">
+          <div class="card-body">
+            <span class="stat-icon bg-{{ stat.tone }}-subtle text-{{ stat.tone }}-emphasis mb-2"><i aria-hidden="true" class="bi {{ stat.icon }}"></i></span>
+            <div class="stat-value">{{ stat.value }}</div>
+            <div class="stat-label">{{ stat.label }}</div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card h-100">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <span class="section-title">Candidatures récentes</span>
+          <a routerLink="/candidate/applications" class="small">Tout voir</a>
+        </div>
+        @if (applications().length === 0) {
+          <div class="empty-state">
+            <i aria-hidden="true" class="bi bi-send"></i>Vous n'avez pas encore postulé.
+            <div><a class="btn btn-primary btn-sm mt-2" routerLink="/candidate/jobs">Parcourir les offres</a></div>
+          </div>
+        } @else {
+          <ul class="list-group list-group-flush">
+            @for (a of applications().slice(0, 5); track a.id) {
+              <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+                <div>
+                  <div class="fw-semibold">{{ a.job.title }}</div>
+                  <div class="small text-secondary">{{ a.job.companyName }} · {{ a.appliedAt | date: 'dd/MM/yyyy' }}</div>
+                </div>
+                <app-status-badge [status]="a.status" />
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="card h-100">
+        <div class="card-header bg-white section-title">Complétude du profil</div>
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="progress flex-grow-1" style="height: .6rem" role="progressbar" [attr.aria-valuenow]="completion()" aria-valuemin="0" aria-valuemax="100">
+              <div class="progress-bar" [style.width.%]="completion()"></div>
+            </div>
+            <strong>{{ completion() }} %</strong>
+          </div>
+          <ul class="list-unstyled small mb-3">
+            @for (c of checks(); track c.label) {
+              <li class="mb-1">
+                <i aria-hidden="true" [class]="c.done ? 'bi bi-check-circle-fill text-success me-2' : 'bi bi-circle text-secondary me-2'"></i>{{ c.label }}
+              </li>
+            }
+          </ul>
+          <a class="btn btn-outline-primary btn-sm" routerLink="/candidate/profile">Compléter mon profil</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  @if (latestJobs().length) {
+    <h2 class="h5 fw-bold mt-4 mb-3">Dernières offres publiées</h2>
+    <div class="row g-3">
+      @for (job of latestJobs(); track job.id) {
+        <div class="col-md-6 col-xl-4"><app-job-card [job]="job" detailBase="/candidate/jobs" /></div>
+      }
+    </div>
+  }
+}

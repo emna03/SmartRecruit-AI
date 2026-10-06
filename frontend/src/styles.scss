@@ -1,0 +1,160 @@
+/* Thème global : Bootstrap 5 (chargé dans angular.json) + personnalisation SmartRecruit. */
+
+:root {
+  --sr-primary: #4f46e5;
+  --sr-primary-dark: #4338ca;
+  --sr-primary-soft: #eef2ff;
+  --sr-surface: #f6f7fb;
+  --sr-border: #e5e7eb;
+  --sr-radius: 0.85rem;
+  --bs-primary: var(--sr-primary);
+  --bs-primary-rgb: 79, 70, 229;
+  --bs-link-color: var(--sr-primary);
+  --bs-link-color-rgb: 79, 70, 229;
+  --bs-link-hover-color: var(--sr-primary-dark);
+  --bs-body-font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--sr-surface);
+  color: #1f2937;
+}
+
+app-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.btn-primary {
+  --bs-btn-bg: var(--sr-primary);
+  --bs-btn-border-color: var(--sr-primary);
+  --bs-btn-hover-bg: var(--sr-primary-dark);
+  --bs-btn-hover-border-color: var(--sr-primary-dark);
+  --bs-btn-active-bg: var(--sr-primary-dark);
+  --bs-btn-active-border-color: var(--sr-primary-dark);
+  --bs-btn-disabled-bg: var(--sr-primary);
+  --bs-btn-disabled-border-color: var(--sr-primary);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--sr-primary);
+  --bs-btn-border-color: var(--sr-primary);
+  --bs-btn-hover-bg: var(--sr-primary);
+  --bs-btn-hover-border-color: var(--sr-primary);
+  --bs-btn-active-bg: var(--sr-primary-dark);
+  --bs-btn-active-border-color: var(--sr-primary-dark);
+}
+
+.text-primary {
+  color: var(--sr-primary) !important;
+}
+
+.bg-primary-soft {
+  background: var(--sr-primary-soft);
+}
+
+.card {
+  border: 1px solid var(--sr-border);
+  border-radius: var(--sr-radius);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.card-hover {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(16, 24, 40, 0.08);
+  }
+}
+
+.page-title {
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.page-subtitle {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+.section-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.skill-badge {
+  display: inline-block;
+  padding: 0.3em 0.7em;
+  margin: 0 0.3rem 0.3rem 0;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: var(--sr-primary-soft);
+  color: var(--sr-primary-dark);
+}
+
+.skill-badge.matched {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.stat-card {
+  .stat-value {
+    font-size: 1.9rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .stat-label {
+    color: #6b7280;
+    font-size: 0.9rem;
+  }
+
+  .stat-icon {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+  }
+}
+
+.form-label {
+  font-weight: 500;
+}
+
+.required::after {
+  content: " *";
+  color: #dc2626;
+}
+
+.table > :not(caption) > * > * {
+  padding: 0.8rem 0.75rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+
+  .bi {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 0.75rem;
+    color: #9ca3af;
+  }
+}
+
+.text-pre-line {
+  white-space: pre-line;
+}

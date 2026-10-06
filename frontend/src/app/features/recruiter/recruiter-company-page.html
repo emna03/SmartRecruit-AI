@@ -1,0 +1,104 @@
+<h1 class="page-title">Entreprise & profil</h1>
+<p class="page-subtitle">Ces informations apparaissent sur vos offres d'emploi.</p>
+
+@if (loading()) {
+  <app-loading-spinner />
+} @else if (loadError()) {
+  <div class="alert alert-danger">{{ loadError() }}</div>
+} @else {
+  <form class="card mb-4" [formGroup]="companyForm" (ngSubmit)="saveCompany()" novalidate>
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <span class="section-title"><i aria-hidden="true" class="bi bi-building me-2 text-primary"></i>Mon entreprise</span>
+      @if (company(); as c) {
+        <span class="small text-secondary">{{ c.jobOfferCount }} offre(s) · {{ c.recruiterCount }} recruteur(s)</span>
+      }
+    </div>
+    <div class="card-body">
+      @if (!company()) {
+        <div class="alert alert-info py-2"><i aria-hidden="true" class="bi bi-info-circle me-1"></i>Renseignez votre entreprise pour pouvoir publier des offres.</div>
+      }
+      @if (companyError()) {
+        <div class="alert alert-danger py-2" data-testid="company-error">{{ companyError() }}</div>
+      }
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label required" for="c-name">Nom</label>
+          <input id="c-name" class="form-control" formControlName="name"
+                 [class.is-invalid]="companyForm.controls.name.touched && companyForm.controls.name.invalid" />
+          <app-field-error [control]="companyForm.controls.name" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="c-sector">Secteur</label>
+          <input id="c-sector" class="form-control" formControlName="sector" placeholder="Ex. Logiciel, Banque..." />
+          <app-field-error [control]="companyForm.controls.sector" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="c-location">Ville</label>
+          <input id="c-location" class="form-control" formControlName="location" />
+          <app-field-error [control]="companyForm.controls.location" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="c-website">Site web</label>
+          <input id="c-website" class="form-control" formControlName="website" placeholder="https://..."
+                 [class.is-invalid]="companyForm.controls.website.touched && companyForm.controls.website.invalid" />
+          <app-field-error [control]="companyForm.controls.website" [messages]="{ pattern: 'Le site doit commencer par http:// ou https://' }" />
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="c-description">Présentation</label>
+          <textarea id="c-description" class="form-control" rows="4" formControlName="description"></textarea>
+          <app-field-error [control]="companyForm.controls.description" />
+        </div>
+      </div>
+    </div>
+    <div class="card-footer bg-white text-end">
+      <button class="btn btn-primary" type="submit" [disabled]="savingCompany()" data-testid="save-company">
+        @if (savingCompany()) {
+          <span class="spinner-border spinner-border-sm me-1"></span>
+        }
+        {{ company() ? 'Enregistrer' : "Créer l'entreprise" }}
+      </button>
+    </div>
+  </form>
+
+  <form class="card" [formGroup]="profileForm" (ngSubmit)="saveProfile()" novalidate>
+    <div class="card-header bg-white section-title"><i aria-hidden="true" class="bi bi-person me-2 text-primary"></i>Mon profil recruteur</div>
+    <div class="card-body">
+      @if (profileError()) {
+        <div class="alert alert-danger py-2">{{ profileError() }}</div>
+      }
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label required" for="r-firstName">Prénom</label>
+          <input id="r-firstName" class="form-control" formControlName="firstName"
+                 [class.is-invalid]="profileForm.controls.firstName.touched && profileForm.controls.firstName.invalid" />
+          <app-field-error [control]="profileForm.controls.firstName" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label required" for="r-lastName">Nom</label>
+          <input id="r-lastName" class="form-control" formControlName="lastName"
+                 [class.is-invalid]="profileForm.controls.lastName.touched && profileForm.controls.lastName.invalid" />
+          <app-field-error [control]="profileForm.controls.lastName" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="r-jobTitle">Fonction</label>
+          <input id="r-jobTitle" class="form-control" formControlName="jobTitle" placeholder="Ex. Responsable RH" />
+          <app-field-error [control]="profileForm.controls.jobTitle" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="r-phone">Téléphone</label>
+          <input id="r-phone" class="form-control" formControlName="phone"
+                 [class.is-invalid]="profileForm.controls.phone.touched && profileForm.controls.phone.invalid" />
+          <app-field-error [control]="profileForm.controls.phone" [messages]="{ pattern: 'Numéro de téléphone invalide.' }" />
+        </div>
+      </div>
+    </div>
+    <div class="card-footer bg-white text-end">
+      <button class="btn btn-primary" type="submit" [disabled]="savingProfile()">
+        @if (savingProfile()) {
+          <span class="spinner-border spinner-border-sm me-1"></span>
+        }
+        Enregistrer
+      </button>
+    </div>
+  </form>
+}

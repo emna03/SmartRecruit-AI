@@ -6,7 +6,7 @@ Application web de recrutement : les entreprises publient des offres, les candid
 et un module d'IA analyse les CV, calcule un score de compatibilité explicable avec les offres
 et répond aux questions via un chatbot RH.
 
-> **État du projet : ÉTAPES 1 (architecture), 2 (MySQL + Spring Boot), 3 (entités JPA), 4 (JWT + rôles) et 5 (profils, entreprises, offres, candidatures) terminées.** Ce README sera complété à l'étape 14.
+> **État du projet : ÉTAPES 1 (architecture), 2 (MySQL + Spring Boot), 3 (entités JPA), 4 (JWT + rôles), 5 (profils, entreprises, offres, candidatures) et 6 (frontend Angular connecté au backend) terminées.** Ce README sera complété à l'étape 14.
 
 ## Démarrage rapide (provisoire)
 
@@ -15,7 +15,12 @@ cp .env.example .env              # remplir les mots de passe et secrets
 docker compose up -d mysql        # MySQL 8.4
 cd backend && mvnw.cmd spring-boot:run
 # GET http://localhost:8080/actuator/health -> {"status":"UP"}
+
+cd frontend && npm install && npm start
+# http://localhost:4200 (le proxy redirige /api vers le backend)
 ```
+
+Frontend : [frontend/README.md](frontend/README.md) (structure, tests unitaires et e2e).
 
 ## Architecture
 

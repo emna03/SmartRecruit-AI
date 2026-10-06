@@ -1,0 +1,90 @@
+<section class="hero py-5">
+  <div class="container-xl py-lg-5">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-7">
+        <span class="badge rounded-pill text-bg-light text-primary mb-3"><i aria-hidden="true" class="bi bi-stars me-1"></i>Plateforme de recrutement</span>
+        <h1 class="display-5 fw-bold mb-3">Trouvez le bon poste,<br />recrutez le bon talent.</h1>
+        <p class="lead opacity-75 mb-4">
+          SmartRecruit AI rapproche candidats et recruteurs : offres ciblées, profils structurés
+          et suivi des candidatures en temps réel.
+        </p>
+        <form class="search-box p-2 d-flex flex-column flex-md-row gap-2" (ngSubmit)="search()" role="search">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-0"><i aria-hidden="true" class="bi bi-search"></i></span>
+            <input class="form-control border-0" name="keyword" [(ngModel)]="keyword" placeholder="Métier, mot-clé..." aria-label="Mot-clé" />
+          </div>
+          <div class="input-group">
+            <span class="input-group-text bg-white border-0"><i aria-hidden="true" class="bi bi-geo-alt"></i></span>
+            <input class="form-control border-0" name="location" [(ngModel)]="location" placeholder="Ville" aria-label="Ville" />
+          </div>
+          <button class="btn btn-primary px-4" type="submit">Rechercher</button>
+        </form>
+        @if (totalJobs() !== null) {
+          <p class="mt-3 mb-0 small opacity-75"><i aria-hidden="true" class="bi bi-briefcase me-1"></i>{{ totalJobs() }} offre(s) publiée(s) actuellement</p>
+        }
+      </div>
+      <div class="col-lg-5 d-none d-lg-block">
+        <div class="row g-3">
+          <div class="col-6"><div class="card p-3 text-dark"><i aria-hidden="true" class="bi bi-person-check fs-3 text-primary"></i><div class="fw-semibold mt-2">Profils complets</div><div class="small text-secondary">Compétences, formations, expériences</div></div></div>
+          <div class="col-6 mt-5"><div class="card p-3 text-dark"><i aria-hidden="true" class="bi bi-funnel fs-3 text-primary"></i><div class="fw-semibold mt-2">Recherche filtrée</div><div class="small text-secondary">Contrat, lieu, compétence, niveau</div></div></div>
+          <div class="col-6"><div class="card p-3 text-dark"><i aria-hidden="true" class="bi bi-kanban fs-3 text-primary"></i><div class="fw-semibold mt-2">Suivi des statuts</div><div class="small text-secondary">En attente, présélection, réponse</div></div></div>
+          <div class="col-6 mt-5"><div class="card p-3 text-dark"><i aria-hidden="true" class="bi bi-shield-check fs-3 text-primary"></i><div class="fw-semibold mt-2">Accès sécurisé</div><div class="small text-secondary">JWT et rôles</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container-xl py-5">
+  <div class="d-flex justify-content-between align-items-end mb-3">
+    <div>
+      <h2 class="h4 fw-bold mb-1">Dernières offres</h2>
+      <p class="text-secondary mb-0">Les offres publiées le plus récemment.</p>
+    </div>
+    <a class="btn btn-outline-primary btn-sm" routerLink="/jobs">Toutes les offres <i aria-hidden="true" class="bi bi-arrow-right"></i></a>
+  </div>
+  @if (loading()) {
+    <app-loading-spinner label="Chargement des offres..." />
+  } @else if (error()) {
+    <div class="alert alert-warning">{{ error() }}</div>
+  } @else if (latestJobs().length === 0) {
+    <div class="card"><div class="empty-state"><i aria-hidden="true" class="bi bi-inbox"></i>Aucune offre publiée pour le moment.</div></div>
+  } @else {
+    <div class="row g-3">
+      @for (job of latestJobs(); track job.id) {
+        <div class="col-md-6 col-lg-4"><app-job-card [job]="job" /></div>
+      }
+    </div>
+  }
+</section>
+
+<section class="bg-white border-top border-bottom py-5">
+  <div class="container-xl">
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="d-flex gap-3">
+          <span class="feature-icon flex-shrink-0"><i aria-hidden="true" class="bi bi-person-badge"></i></span>
+          <div>
+            <h3 class="h5 fw-semibold">Vous êtes candidat ?</h3>
+            <p class="text-secondary">Créez votre profil, renseignez vos compétences et postulez en un clic. Suivez l'avancement de chaque candidature.</p>
+            @if (!auth.user()) {
+              <a class="btn btn-primary btn-sm" routerLink="/register">Créer mon profil</a>
+            }
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="d-flex gap-3">
+          <span class="feature-icon flex-shrink-0"><i aria-hidden="true" class="bi bi-briefcase"></i></span>
+          <div>
+            <h3 class="h5 fw-semibold">Vous recrutez ?</h3>
+            <p class="text-secondary">Présentez votre entreprise, publiez vos offres et gérez les candidatures reçues depuis un seul espace.</p>
+            @if (!auth.user()) {
+              <a class="btn btn-outline-primary btn-sm" routerLink="/register" [queryParams]="{ role: 'RECRUTEUR' }">Publier une offre</a>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,76 @@
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+  <div>
+    <h1 class="page-title">Mes offres</h1>
+    <p class="page-subtitle">Créez, publiez et suivez les offres de votre entreprise.</p>
+  </div>
+  @if (hasCompany()) {
+    <a class="btn btn-primary" routerLink="/recruiter/jobs/create" data-testid="new-job"><i aria-hidden="true" class="bi bi-plus-lg me-1"></i>Nouvelle offre</a>
+  }
+</div>
+
+@if (loading()) {
+  <app-loading-spinner />
+} @else if (error()) {
+  <div class="alert alert-danger">{{ error() }}</div>
+} @else if (!hasCompany()) {
+  <app-no-company-notice />
+} @else if (jobs().length === 0) {
+  <div class="card">
+    <div class="empty-state">
+      <i aria-hidden="true" class="bi bi-file-earmark-plus"></i>Aucune offre pour le moment.
+      <div><a class="btn btn-primary btn-sm mt-2" routerLink="/recruiter/jobs/create">Créer ma première offre</a></div>
+    </div>
+  </div>
+} @else {
+  <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Filtrer par statut">
+    <button type="button" [class]="filter() === null ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline-secondary'"
+            (click)="filter.set(null)">Toutes ({{ jobs().length }})</button>
+    @for (o of statusOptions; track o.value) {
+      <button type="button" [class]="filter() === o.value ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline-secondary'"
+              (click)="filter.set(o.value)">{{ o.label }} ({{ countOf(o.value) }})</button>
+    }
+  </div>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0" data-testid="recruiter-jobs-table">
+        <thead class="table-light">
+          <tr><th>Offre</th><th>Statut</th><th class="text-center">Candidatures</th><th class="d-none d-lg-table-cell">Créée le</th><th class="text-end">Actions</th></tr>
+        </thead>
+        <tbody>
+          @for (job of filtered(); track job.id) {
+            <tr>
+              <td>
+                <div class="fw-semibold">{{ job.title }}</div>
+                <div class="small text-secondary">{{ job.contractType | label: 'contract' }}@if (job.location) { · {{ job.location }} }</div>
+              </td>
+              <td><app-status-badge [status]="job.status" kind="jobStatus" /></td>
+              <td class="text-center">
+                <a [routerLink]="['/recruiter/jobs', job.id, 'candidates']" class="fw-semibold">{{ job.applicationCount ?? 0 }}</a>
+              </td>
+              <td class="d-none d-lg-table-cell">{{ job.createdAt | date: 'dd/MM/yyyy' }}</td>
+              <td class="text-end text-nowrap">
+                @if (job.status !== 'PUBLIEE') {
+                  <button class="btn btn-sm btn-success me-1" type="button" [disabled]="busyId() === job.id"
+                          (click)="changeStatus(job, 'PUBLIEE')" title="Publier" data-testid="publish-job">
+                    <i aria-hidden="true" class="bi bi-broadcast"></i><span class="d-none d-xl-inline ms-1">Publier</span>
+                  </button>
+                } @else {
+                  <button class="btn btn-sm btn-outline-dark me-1" type="button" [disabled]="busyId() === job.id"
+                          (click)="changeStatus(job, 'FERMEE')" title="Fermer l'offre">
+                    <i aria-hidden="true" class="bi bi-lock"></i><span class="d-none d-xl-inline ms-1">Fermer</span>
+                  </button>
+                }
+                <a class="btn btn-sm btn-outline-primary me-1" [routerLink]="['/recruiter/jobs', job.id, 'candidates']" title="Candidats" aria-label="Candidats"><i aria-hidden="true" class="bi bi-people"></i></a>
+                <a class="btn btn-sm btn-outline-secondary me-1" [routerLink]="['/recruiter/jobs', job.id, 'edit']" title="Modifier" aria-label="Modifier"><i aria-hidden="true" class="bi bi-pencil"></i></a>
+                <button class="btn btn-sm btn-outline-danger" type="button" [disabled]="busyId() === job.id" (click)="remove(job)" title="Supprimer" aria-label="Supprimer"><i aria-hidden="true" class="bi bi-trash"></i></button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="text-center text-secondary py-4">Aucune offre avec ce statut.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}

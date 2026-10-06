@@ -1,0 +1,96 @@
+<div class="card mb-4">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <span class="section-title"><i aria-hidden="true" class="bi bi-briefcase me-2 text-primary"></i>Expériences professionnelles</span>
+    @if (editing() === null) {
+      <button class="btn btn-outline-primary btn-sm" type="button" (click)="openNew()" data-testid="add-experience">
+        <i aria-hidden="true" class="bi bi-plus-lg me-1"></i>Ajouter
+      </button>
+    }
+  </div>
+  <div class="card-body">
+    @if (editing() !== null) {
+      <form class="border rounded-3 p-3 mb-3 bg-light" [formGroup]="form" (ngSubmit)="save()" novalidate>
+        @if (error()) {
+          <div class="alert alert-danger py-2">{{ error() }}</div>
+        }
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label required" for="exp-title">Poste</label>
+            <input id="exp-title" class="form-control" formControlName="jobTitle" placeholder="Ex. Développeur Java"
+                   [class.is-invalid]="form.controls.jobTitle.touched && form.controls.jobTitle.invalid" />
+            <app-field-error [control]="form.controls.jobTitle" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label required" for="exp-company">Entreprise</label>
+            <input id="exp-company" class="form-control" formControlName="companyName"
+                   [class.is-invalid]="form.controls.companyName.touched && form.controls.companyName.invalid" />
+            <app-field-error [control]="form.controls.companyName" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="exp-location">Lieu</label>
+            <input id="exp-location" class="form-control" formControlName="location" />
+          </div>
+          <div class="col-6 col-md-4">
+            <label class="form-label required" for="exp-start">Début</label>
+            <input id="exp-start" type="date" class="form-control" formControlName="startDate" [max]="today"
+                   [class.is-invalid]="form.controls.startDate.touched && form.controls.startDate.invalid" />
+            <app-field-error [control]="form.controls.startDate" [messages]="{ future: 'La date de début ne peut pas être dans le futur.' }" />
+          </div>
+          <div class="col-6 col-md-4">
+            <label class="form-label" for="exp-end">Fin</label>
+            <input id="exp-end" type="date" class="form-control" formControlName="endDate" [class.is-invalid]="form.hasError('dateOrder')" />
+            <div class="form-check mt-1">
+              <input id="exp-current" class="form-check-input" type="checkbox" formControlName="current" />
+              <label class="form-check-label small" for="exp-current">Poste actuel</label>
+            </div>
+          </div>
+          @if (form.hasError('dateOrder')) {
+            <div class="col-12 mt-1"><div class="invalid-feedback d-block">La date de fin doit être postérieure à la date de début.</div></div>
+          }
+          <div class="col-12">
+            <label class="form-label" for="exp-description">Missions</label>
+            <textarea id="exp-description" class="form-control" rows="2" formControlName="description"></textarea>
+            <app-field-error [control]="form.controls.description" />
+          </div>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-3">
+          <button class="btn btn-outline-secondary" type="button" (click)="cancel()">Annuler</button>
+          <button class="btn btn-primary" type="submit" [disabled]="saving()" data-testid="save-experience">
+            @if (saving()) {
+              <span class="spinner-border spinner-border-sm me-1"></span>
+            }
+            Enregistrer
+          </button>
+        </div>
+      </form>
+    }
+
+    @for (exp of profile().experiences; track exp.id) {
+      <div class="d-flex justify-content-between align-items-start py-2" [class.border-top]="!$first">
+        <div>
+          <div class="fw-semibold">
+            {{ exp.jobTitle }}
+            @if (exp.current) {
+              <span class="badge text-bg-success ms-1">Actuel</span>
+            }
+          </div>
+          <div class="small text-secondary">
+            {{ exp.companyName }}@if (exp.location) { · {{ exp.location }} }
+            · {{ exp.startDate | date: 'MM/yyyy' }} – {{ exp.endDate ? (exp.endDate | date: 'MM/yyyy') : "aujourd'hui" }}
+          </div>
+          @if (exp.description) {
+            <div class="small mt-1 text-pre-line">{{ exp.description }}</div>
+          }
+        </div>
+        <div class="btn-group btn-group-sm flex-shrink-0">
+          <button class="btn btn-outline-secondary" type="button" (click)="edit(exp)" title="Modifier" aria-label="Modifier"><i aria-hidden="true" class="bi bi-pencil"></i></button>
+          <button class="btn btn-outline-danger" type="button" (click)="remove(exp)" title="Supprimer" aria-label="Supprimer"><i aria-hidden="true" class="bi bi-trash"></i></button>
+        </div>
+      </div>
+    } @empty {
+      @if (editing() === null) {
+        <p class="text-secondary mb-0 small">Aucune expérience renseignée.</p>
+      }
+    }
+  </div>
+</div>

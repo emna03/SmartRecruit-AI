@@ -1,0 +1,80 @@
+<a class="btn btn-link px-0 mb-2" routerLink="/recruiter/jobs"><i aria-hidden="true" class="bi bi-arrow-left me-1"></i>Mes offres</a>
+
+@if (loading()) {
+  <app-loading-spinner />
+} @else if (error()) {
+  <div class="alert alert-danger">{{ error() }}</div>
+} @else if (job(); as job) {
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+    <div>
+      <h1 class="page-title">Candidats — {{ job.title }}</h1>
+      <div class="text-secondary">
+        <app-status-badge [status]="job.status" kind="jobStatus" />
+        <span class="ms-2">{{ job.contractType | label: 'contract' }}</span>
+        <span class="ms-2">· {{ applications().length }} candidature(s)</span>
+      </div>
+    </div>
+    <a class="btn btn-outline-secondary btn-sm" [routerLink]="['/recruiter/jobs', job.id, 'edit']"><i aria-hidden="true" class="bi bi-pencil me-1"></i>Modifier l'offre</a>
+  </div>
+
+  @if (applications().length === 0) {
+    <div class="card"><div class="empty-state"><i aria-hidden="true" class="bi bi-people"></i>Aucune candidature reçue pour cette offre.</div></div>
+  } @else {
+    <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Filtrer par statut">
+      <button type="button" [class]="filter() === null ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline-secondary'"
+              (click)="filter.set(null)">Toutes ({{ applications().length }})</button>
+      @for (o of statusOptions; track o.value) {
+        <button type="button" [class]="filter() === o.value ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline-secondary'"
+                (click)="filter.set(o.value)">{{ o.label }} ({{ countOf(o.value) }})</button>
+      }
+    </div>
+
+    <div class="row g-3">
+      @for (a of filtered(); track a.id) {
+        <div class="col-12">
+          <div class="card" data-testid="candidate-card">
+            <div class="card-body">
+              <div class="row g-3 align-items-center">
+                <div class="col-lg-5">
+                  <div class="fw-semibold">{{ a.candidate.firstName }} {{ a.candidate.lastName }}</div>
+                  <div class="small text-secondary">{{ a.candidate.headline || 'Profil sans titre' }}</div>
+                  <div class="small text-secondary mt-1">
+                    <i aria-hidden="true" class="bi bi-envelope me-1"></i>{{ a.candidate.email }}
+                    @if (a.candidate.location) {
+                      <span class="ms-2"><i aria-hidden="true" class="bi bi-geo-alt me-1"></i>{{ a.candidate.location }}</span>
+                    }
+                  </div>
+                  <div class="small text-secondary mt-1">
+                    {{ a.candidate.yearsOfExperience ?? 0 }} an(s) d'expérience · {{ a.candidate.educationLevel | label: 'education' }}
+                    · postulé le {{ a.appliedAt | date: 'dd/MM/yyyy' }}
+                  </div>
+                </div>
+                <div class="col-lg-4">
+                  @for (skill of a.candidate.skills; track skill) {
+                    <span class="skill-badge" [class.matched]="isRequired(skill)" [title]="isRequired(skill) ? 'Compétence demandée par l’offre' : ''">{{ skill }}</span>
+                  } @empty {
+                    <span class="small text-secondary">Aucune compétence renseignée</span>
+                  }
+                </div>
+                <div class="col-lg-3">
+                  <label class="form-label small mb-1" [for]="'status-' + a.id">Statut</label>
+                  <select class="form-select form-select-sm mb-2" [id]="'status-' + a.id" [value]="a.status"
+                          [disabled]="busyId() === a.id" (change)="changeStatus(a, $any($event.target).value)"
+                          data-testid="application-status">
+                    @for (o of statusOptions; track o.value) {
+                      <option [value]="o.value" [selected]="o.value === a.status">{{ o.label }}</option>
+                    }
+                  </select>
+                  <a class="btn btn-sm btn-outline-primary w-100" [routerLink]="['/recruiter/applications', a.id]">Voir le profil complet</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      } @empty {
+        <div class="col-12 text-center text-secondary py-4">Aucune candidature avec ce statut.</div>
+      }
+    </div>
+    <p class="small text-secondary mt-3"><span class="skill-badge matched">vert</span> = compétence du candidat également demandée par l'offre.</p>
+  }
+}

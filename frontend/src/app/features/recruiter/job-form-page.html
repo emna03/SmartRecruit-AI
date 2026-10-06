@@ -1,0 +1,104 @@
+<a class="btn btn-link px-0 mb-2" routerLink="/recruiter/jobs"><i aria-hidden="true" class="bi bi-arrow-left me-1"></i>Mes offres</a>
+<h1 class="page-title">{{ isEdit() ? "Modifier l'offre" : 'Nouvelle offre' }}</h1>
+<p class="page-subtitle">Les champs marqués d'un astérisque sont obligatoires.</p>
+
+@if (loading()) {
+  <app-loading-spinner />
+} @else {
+  <form class="card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="card-body">
+      @if (error()) {
+        <div class="alert alert-danger py-2" data-testid="job-form-error">{{ error() }}</div>
+      }
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label required" for="j-title">Intitulé du poste</label>
+          <input id="j-title" class="form-control" formControlName="title" placeholder="Ex. Développeur Full Stack Java / Angular"
+                 [class.is-invalid]="form.controls.title.touched && form.controls.title.invalid" />
+          <app-field-error [control]="form.controls.title" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label required" for="j-contract">Type de contrat</label>
+          <select id="j-contract" class="form-select" formControlName="contractType"
+                  [class.is-invalid]="form.controls.contractType.touched && form.controls.contractType.invalid">
+            <option value="" disabled>Choisir...</option>
+            @for (o of contractOptions; track o.value) {
+              <option [value]="o.value">{{ o.label }}</option>
+            }
+          </select>
+          <app-field-error [control]="form.controls.contractType" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="j-location">Lieu</label>
+          <input id="j-location" class="form-control" formControlName="location" placeholder="Ex. Tunis" />
+          <app-field-error [control]="form.controls.location" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label required" for="j-exp">Expérience minimale (années)</label>
+          <input id="j-exp" type="number" min="0" max="50" class="form-control" formControlName="minExperienceYears"
+                 [class.is-invalid]="form.controls.minExperienceYears.touched && form.controls.minExperienceYears.invalid" />
+          <app-field-error [control]="form.controls.minExperienceYears" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="j-education">Niveau d'étude</label>
+          <select id="j-education" class="form-select" formControlName="educationLevel">
+            <option value="">Non précisé</option>
+            @for (o of educationOptions; track o.value) {
+              <option [value]="o.value">{{ o.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-6 col-md-4">
+          <label class="form-label" for="j-salaryMin">Salaire min.</label>
+          <input id="j-salaryMin" type="number" min="0" class="form-control" formControlName="salaryMin"
+                 [class.is-invalid]="form.controls.salaryMin.touched && form.controls.salaryMin.invalid" />
+          <app-field-error [control]="form.controls.salaryMin" />
+        </div>
+        <div class="col-6 col-md-4">
+          <label class="form-label" for="j-salaryMax">Salaire max.</label>
+          <input id="j-salaryMax" type="number" min="0" class="form-control" formControlName="salaryMax"
+                 [class.is-invalid]="(form.controls.salaryMax.touched && form.controls.salaryMax.invalid) || form.hasError('salaryOrder')" />
+          <app-field-error [control]="form.controls.salaryMax" />
+          @if (form.hasError('salaryOrder')) {
+            <div class="invalid-feedback d-block">Le salaire max. doit être supérieur ou égal au salaire min.</div>
+          }
+        </div>
+        <div class="col-12">
+          <label class="form-label required" for="job-skills">Compétences requises</label>
+          <app-skills-input formControlName="requiredSkills" inputId="job-skills"
+                            [invalid]="form.controls.requiredSkills.touched && form.controls.requiredSkills.invalid" />
+          <app-field-error [control]="form.controls.requiredSkills" [messages]="{ required: 'Indiquez au moins une compétence.' }" />
+        </div>
+        <div class="col-12">
+          <label class="form-label required" for="j-description">Description du poste</label>
+          <textarea id="j-description" class="form-control" rows="8" formControlName="description"
+                    placeholder="Missions, profil recherché, avantages..."
+                    [class.is-invalid]="form.controls.description.touched && form.controls.description.invalid"></textarea>
+          <app-field-error [control]="form.controls.description" />
+          <div class="form-text">{{ form.controls.description.value.length }}/10000 caractères</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer bg-white d-flex flex-wrap justify-content-end gap-2">
+      <a class="btn btn-outline-secondary" routerLink="/recruiter/jobs">Annuler</a>
+      @if (isEdit()) {
+        <button class="btn btn-primary" type="submit" [disabled]="saving()" data-testid="save-job">
+          @if (saving()) {
+            <span class="spinner-border spinner-border-sm me-1"></span>
+          }
+          Enregistrer les modifications
+        </button>
+      } @else {
+        <button class="btn btn-outline-primary" type="button" (click)="submit('BROUILLON')" [disabled]="saving()" data-testid="save-draft">
+          Enregistrer en brouillon
+        </button>
+        <button class="btn btn-primary" type="button" (click)="submit('PUBLIEE')" [disabled]="saving()" data-testid="publish-new-job">
+          @if (saving()) {
+            <span class="spinner-border spinner-border-sm me-1"></span>
+          }
+          Publier l'offre
+        </button>
+      }
+    </div>
+  </form>
+}

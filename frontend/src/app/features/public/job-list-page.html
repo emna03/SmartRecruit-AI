@@ -1,0 +1,85 @@
+<div [class]="embedded() ? '' : 'container-xl py-4'">
+  <h1 class="page-title">Offres d'emploi</h1>
+  <p class="page-subtitle">Recherchez parmi les offres publiées par les entreprises.</p>
+
+  <form class="card mb-4" [formGroup]="form" (ngSubmit)="search()" role="search">
+    <div class="card-body">
+      <div class="row g-2">
+        <div class="col-md-5">
+          <div class="input-group">
+            <span class="input-group-text bg-white"><i aria-hidden="true" class="bi bi-search"></i></span>
+            <input class="form-control" formControlName="keyword" placeholder="Titre ou mot-clé" aria-label="Mot-clé" data-testid="filter-keyword" />
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="input-group">
+            <span class="input-group-text bg-white"><i aria-hidden="true" class="bi bi-geo-alt"></i></span>
+            <input class="form-control" formControlName="location" placeholder="Ville" aria-label="Ville" />
+          </div>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+          <button class="btn btn-primary flex-grow-1" type="submit">Rechercher</button>
+          <button class="btn btn-outline-secondary" type="button" (click)="showFilters.set(!showFilters())"
+                  [attr.aria-expanded]="showFilters()" title="Plus de filtres">
+            <i aria-hidden="true" class="bi bi-sliders"></i>
+          </button>
+        </div>
+      </div>
+      @if (showFilters()) {
+        <div class="row g-2 mt-1">
+          <div class="col-sm-6 col-lg-3">
+            <label class="form-label small mb-1" for="f-contract">Contrat</label>
+            <select id="f-contract" class="form-select" formControlName="contractType">
+              <option value="">Tous</option>
+              @for (o of contractOptions; track o.value) {
+                <option [value]="o.value">{{ o.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <label class="form-label small mb-1" for="f-skill">Compétence</label>
+            <input id="f-skill" class="form-control" formControlName="skill" placeholder="Ex. Java" />
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <label class="form-label small mb-1" for="f-education">Niveau d'étude</label>
+            <select id="f-education" class="form-select" formControlName="educationLevel">
+              <option value="">Tous</option>
+              @for (o of educationOptions; track o.value) {
+                <option [value]="o.value">{{ o.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <label class="form-label small mb-1" for="f-exp">Mon expérience (années)</label>
+            <input id="f-exp" type="number" min="0" max="50" class="form-control" formControlName="maxExperienceYears" />
+          </div>
+          <div class="col-12 text-end">
+            <button class="btn btn-link btn-sm" type="button" (click)="reset()">Réinitialiser les filtres</button>
+          </div>
+        </div>
+      }
+    </div>
+  </form>
+
+  @if (loading()) {
+    <app-loading-spinner label="Recherche des offres..." />
+  } @else if (error()) {
+    <div class="alert alert-danger">{{ error() }}</div>
+  } @else if (jobs().length === 0) {
+    <div class="card">
+      <div class="empty-state">
+        <i aria-hidden="true" class="bi bi-search"></i>
+        Aucune offre ne correspond à votre recherche.
+        <div><button class="btn btn-link" type="button" (click)="reset()">Voir toutes les offres</button></div>
+      </div>
+    </div>
+  } @else {
+    <p class="text-secondary small mb-2" data-testid="jobs-count">{{ totalElements() }} offre(s) trouvée(s)</p>
+    <div class="row g-3 mb-4">
+      @for (job of jobs(); track job.id) {
+        <div class="col-md-6 col-xl-4"><app-job-card [job]="job" [detailBase]="detailBase()" /></div>
+      }
+    </div>
+    <app-pagination [page]="page()" [totalPages]="totalPages()" (pageChange)="goToPage($event)" />
+  }
+</div>

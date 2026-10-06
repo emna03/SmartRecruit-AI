@@ -1,0 +1,97 @@
+@if (loading()) {
+  <app-loading-spinner />
+} @else if (error()) {
+  <a class="btn btn-link px-0 mb-2" routerLink="/recruiter/jobs"><i aria-hidden="true" class="bi bi-arrow-left me-1"></i>Mes offres</a>
+  <div class="alert alert-danger">{{ error() }}</div>
+} @else if (application(); as a) {
+  <a class="btn btn-link px-0 mb-2" [routerLink]="['/recruiter/jobs', a.jobOfferId, 'candidates']">
+    <i aria-hidden="true" class="bi bi-arrow-left me-1"></i>Candidats — {{ a.jobTitle }}
+  </a>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card mb-4">
+        <div class="card-body p-4">
+          <h1 class="h4 fw-bold mb-1">{{ a.candidate.firstName }} {{ a.candidate.lastName }}</h1>
+          <div class="text-secondary mb-3">{{ a.candidate.headline || 'Profil sans titre' }}</div>
+          <div class="row g-2 small mb-3">
+            <div class="col-sm-6"><i aria-hidden="true" class="bi bi-envelope me-2 text-primary"></i>{{ a.candidate.email }}</div>
+            <div class="col-sm-6"><i aria-hidden="true" class="bi bi-telephone me-2 text-primary"></i>{{ a.candidate.phone || '—' }}</div>
+            <div class="col-sm-6"><i aria-hidden="true" class="bi bi-geo-alt me-2 text-primary"></i>{{ a.candidate.location || '—' }}</div>
+            <div class="col-sm-6"><i aria-hidden="true" class="bi bi-mortarboard me-2 text-primary"></i>{{ a.candidate.educationLevel | label: 'education' }}</div>
+            <div class="col-sm-6"><i aria-hidden="true" class="bi bi-briefcase me-2 text-primary"></i>{{ a.candidate.yearsOfExperience ?? 0 }} an(s) d'expérience</div>
+          </div>
+          @if (a.candidate.summary) {
+            <h2 class="section-title">Résumé</h2>
+            <p class="text-pre-line">{{ a.candidate.summary }}</p>
+          }
+          <h2 class="section-title">Compétences</h2>
+          <div>
+            @for (skill of a.candidate.skills; track skill) {
+              <span class="skill-badge">{{ skill }}</span>
+            } @empty {
+              <span class="small text-secondary">Aucune compétence renseignée</span>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header bg-white section-title">Expériences</div>
+        <div class="card-body">
+          @for (exp of a.candidate.experiences; track exp.id) {
+            <div class="py-2" [class.border-top]="!$first">
+              <div class="fw-semibold">{{ exp.jobTitle }} — {{ exp.companyName }}</div>
+              <div class="small text-secondary">{{ exp.startDate | date: 'MM/yyyy' }} – {{ exp.endDate ? (exp.endDate | date: 'MM/yyyy') : "aujourd'hui" }}@if (exp.location) { · {{ exp.location }} }</div>
+              @if (exp.description) {
+                <div class="small mt-1 text-pre-line">{{ exp.description }}</div>
+              }
+            </div>
+          } @empty {
+            <span class="small text-secondary">Aucune expérience renseignée.</span>
+          }
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header bg-white section-title">Formations</div>
+        <div class="card-body">
+          @for (edu of a.candidate.educations; track edu.id) {
+            <div class="py-2" [class.border-top]="!$first">
+              <div class="fw-semibold">{{ edu.degree }}@if (edu.fieldOfStudy) { — {{ edu.fieldOfStudy }} }</div>
+              <div class="small text-secondary">{{ edu.institution }}@if (edu.startDate) { · {{ edu.startDate | date: 'yyyy' }} – {{ edu.endDate ? (edu.endDate | date: 'yyyy') : '...' }} }</div>
+            </div>
+          } @empty {
+            <span class="small text-secondary">Aucune formation renseignée.</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="small text-secondary mb-1">Candidature du {{ a.appliedAt | date: 'dd/MM/yyyy' }}</div>
+          <div class="mb-3">Statut actuel : <app-status-badge [status]="a.status" /></div>
+          <div class="d-grid gap-2">
+            @for (o of statusOptions; track o.value) {
+              <button type="button" class="btn btn-sm" [disabled]="saving() || a.status === o.value"
+                      [class]="a.status === o.value ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline-secondary'"
+                      (click)="changeStatus(o.value)">{{ o.label }}</button>
+            }
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header bg-white section-title">Lettre de motivation</div>
+        <div class="card-body">
+          @if (a.coverLetter) {
+            <p class="text-pre-line small mb-0">{{ a.coverLetter }}</p>
+          } @else {
+            <span class="small text-secondary">Aucune lettre jointe.</span>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}

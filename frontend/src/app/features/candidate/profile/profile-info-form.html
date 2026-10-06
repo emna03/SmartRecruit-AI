@@ -1,0 +1,70 @@
+<form class="card mb-4" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="card-header bg-white section-title"><i aria-hidden="true" class="bi bi-person me-2 text-primary"></i>Informations personnelles</div>
+  <div class="card-body">
+    @if (error()) {
+      <div class="alert alert-danger py-2">{{ error() }}</div>
+    }
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label required" for="p-firstName">Prénom</label>
+        <input id="p-firstName" class="form-control" formControlName="firstName"
+               [class.is-invalid]="form.controls.firstName.touched && form.controls.firstName.invalid" />
+        <app-field-error [control]="form.controls.firstName" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label required" for="p-lastName">Nom</label>
+        <input id="p-lastName" class="form-control" formControlName="lastName"
+               [class.is-invalid]="form.controls.lastName.touched && form.controls.lastName.invalid" />
+        <app-field-error [control]="form.controls.lastName" />
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="p-headline">Titre du profil</label>
+        <input id="p-headline" class="form-control" formControlName="headline" placeholder="Ex. Développeuse Full Stack Java / Angular"
+               [class.is-invalid]="form.controls.headline.touched && form.controls.headline.invalid" />
+        <app-field-error [control]="form.controls.headline" />
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="p-summary">Résumé</label>
+        <textarea id="p-summary" class="form-control" rows="4" formControlName="summary"
+                  placeholder="Présentez votre parcours et vos objectifs"
+                  [class.is-invalid]="form.controls.summary.touched && form.controls.summary.invalid"></textarea>
+        <app-field-error [control]="form.controls.summary" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="p-phone">Téléphone</label>
+        <input id="p-phone" class="form-control" formControlName="phone" placeholder="+216 20 123 456" autocomplete="tel"
+               [class.is-invalid]="form.controls.phone.touched && form.controls.phone.invalid" />
+        <app-field-error [control]="form.controls.phone" [messages]="{ pattern: 'Numéro de téléphone invalide (6 à 30 chiffres, +, espaces).' }" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="p-location">Ville</label>
+        <input id="p-location" class="form-control" formControlName="location" placeholder="Tunis"
+               [class.is-invalid]="form.controls.location.touched && form.controls.location.invalid" />
+        <app-field-error [control]="form.controls.location" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="p-years">Années d'expérience</label>
+        <input id="p-years" type="number" min="0" max="60" class="form-control" formControlName="yearsOfExperience"
+               [class.is-invalid]="form.controls.yearsOfExperience.touched && form.controls.yearsOfExperience.invalid" />
+        <app-field-error [control]="form.controls.yearsOfExperience" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="p-education">Niveau d'étude</label>
+        <select id="p-education" class="form-select" formControlName="educationLevel">
+          <option value="">Non renseigné</option>
+          @for (o of educationOptions; track o.value) {
+            <option [value]="o.value">{{ o.label }}</option>
+          }
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="card-footer bg-white text-end">
+    <button class="btn btn-primary" type="submit" [disabled]="saving()" data-testid="save-profile">
+      @if (saving()) {
+        <span class="spinner-border spinner-border-sm me-1"></span>
+      }
+      Enregistrer
+    </button>
+  </div>
+</form>
