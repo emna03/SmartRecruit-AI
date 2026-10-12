@@ -54,8 +54,37 @@ docker compose up -d mysql *> $null
 Pop-Location
 WaitFor "de MySQL" { (docker inspect -f "{{.State.Health.Status}}" smartrecruit-mysql 2>$null) -eq "healthy" } 120
 
+# Le port 4200 peut être occupé par une autre application Angular : on reconnaît la nôtre à son dossier.
+$frontRunning = FrontendPort
+$frontPort = $frontRunning
+if (-not $frontPort) {
+    $frontPort = 4200
+    while (Listening $frontPort) { $frontPort++ }
+}
+$frontOrigin = "http://localhost:$frontPort"
+
+# Le backend refuse (403 « Invalid CORS request ») les appels venant d'une origine non autorisée :
+# l'origine réelle du frontend est ajoutée à CORS_ALLOWED_ORIGINS.
+$origins = @((EnvValue "CORS_ALLOWED_ORIGINS" "http://localhost:4200") -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+if ($origins -notcontains $frontOrigin) { $origins += $frontOrigin }
+$corsOrigins = $origins -join ","
+
+function BackendAcceptsFrontend {
+    try {
+        $headers = @{ Origin = $frontOrigin; "Access-Control-Request-Method" = "POST" }
+        (Invoke-WebRequest -UseBasicParsing -Method Options -Headers $headers "http://localhost:$backendPort/api/auth/login" -TimeoutSec 3).StatusCode -eq 200
+    } catch { $false }
+}
+
 Write-Host "2/4 Backend Spring Boot (port $backendPort)"
-if (Listening $backendPort) { Write-Host "  déjà démarré" } else { StartWindow "Backend" "backend" ".\mvnw.cmd spring-boot:run" }
+if ((Listening $backendPort) -and -not (BackendAcceptsFrontend)) {
+    Write-Host "  relancé pour autoriser $frontOrigin"
+    Get-NetTCPConnection -State Listen -LocalPort $backendPort | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
+    Start-Sleep 3
+}
+if (Listening $backendPort) { Write-Host "  déjà démarré" } else {
+    StartWindow "Backend" "backend" "`$env:CORS_ALLOWED_ORIGINS='$corsOrigins'; .\mvnw.cmd spring-boot:run"
+}
 
 Write-Host "3/4 Service IA FastAPI (port $aiPort)"
 $aiDocs = "http://127.0.0.1:$aiPort/docs"
@@ -69,14 +98,10 @@ if (Listening $aiPort) { Write-Host "  déjà démarré" } else {
     StartWindow "Service IA" "ai-service" "`$env:PYTHONUTF8=1; `$env:AI_DOCS_ENABLED='true'; .\.venv\Scripts\python.exe -m app"
 }
 
-# Le port 4200 peut être occupé par une autre application Angular : on reconnaît la nôtre à son dossier.
-$frontPort = FrontendPort
-if ($frontPort) {
+if ($frontRunning) {
     Write-Host "4/4 Frontend Angular (port $frontPort)"
     Write-Host "  déjà démarré"
 } else {
-    $frontPort = 4200
-    while (Listening $frontPort) { $frontPort++ }
     Write-Host "4/4 Frontend Angular (port $frontPort)"
     if ($frontPort -ne 4200) { Write-Host "  le port 4200 est pris par un autre programme : SmartRecruit utilise le port $frontPort" }
     # NG_CLI_ANALYTICS : sinon Angular CLI peut bloquer sur sa question de statistiques d'usage.
