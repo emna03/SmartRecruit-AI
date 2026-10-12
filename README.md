@@ -42,6 +42,19 @@ Versions exactes : `backend/pom.xml`, `ai-service/requirements.txt`, `frontend/p
 - Les commandes ci-dessous sont pour Windows (PowerShell) ; sous Linux/macOS, remplacer `mvnw.cmd` par `./mvnw` et
   `.venv\Scripts\python.exe` par `.venv/bin/python`.
 
+## Démarrage en une commande
+
+Une fois l'installation ci-dessous faite (une seule fois), depuis la racine du projet :
+
+```powershell
+.\demarrer      # MySQL + backend + service IA + Angular, puis ouvre l'application et la page des modèles IA
+.\arreter       # arrête tout
+```
+
+Si le port 4200 est déjà pris par une autre application, SmartRecruit utilise automatiquement le port suivant
+(4201…), affiché à la fin du démarrage. La page des modèles IA (Swagger, `http://127.0.0.1:8000/docs`) n'est
+accessible que depuis la machine locale ; bouton « Authorize » : valeur `AI_INTERNAL_API_KEY` du `.env`.
+
 ## Installation pas à pas
 
 ### 1. Cloner le dépôt
