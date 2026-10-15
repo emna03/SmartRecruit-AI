@@ -23,9 +23,7 @@ répond aux questions via un Assistant RH et estime un risque de turnover (Machi
 | MySQL | 8.4 (image Docker `mysql:8.4`) |
 | Python | 3.13 (3.12 minimum) — FastAPI 0.142, Uvicorn 0.54, Pydantic 2.13, pdfplumber 0.11.10, rapidfuzz 3.14.6, scikit-learn 1.7.2, pandas 3.0.6, numpy 2.5.3 |
 | Node.js | 20.19+, 22.12+ ou 24+ (24.13 utilisé) |
-| Angular | 21.2 — TypeScript 5.9, Bootstrap 5.3, Chart.js 4.5, Vitest 4, Playwright 1.63 |
-
-Versions exactes : `backend/pom.xml`, `ai-service/requirements.txt`, `frontend/package.json`.
+| Angular | 21.2 — TypeScript 5.9, Bootstrap 5.3, Chart.js 4.5, Vitest 4, Playwright 1.63 
 
 
 
@@ -70,22 +68,6 @@ cd backend
 # Vérifier : http://localhost:8080/actuator/health -> {"status":"UP"}
 ```
 
-### 5. Installer et démarrer le service IA FastAPI
-
-Dans un deuxième terminal :
-
-```powershell
-cd ai-service
-py -3.13 -m venv .venv                                         # environnement virtuel dédié
-.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
-.\.venv\Scripts\python.exe -m ml.download_dataset             # dataset IBM fictif (SHA-256 vérifié)
-.\.venv\Scripts\python.exe -m ml.train                        # entraîne le modèle de turnover + rapport
-.\.venv\Scripts\python.exe -m app
-# Vérifier : http://127.0.0.1:8000/health -> {"status":"UP",...}
-```
-
-Le dataset et le modèle ne sont pas versionnés (fichiers locaux) ; sans modèle, seul le module turnover est
-indisponible (503). Détails : [ai-service/README.md](ai-service/README.md).
 
 ### 6. Démarrer le frontend Angular
 
