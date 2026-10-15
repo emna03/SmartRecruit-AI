@@ -55,7 +55,7 @@ public record TurnoverPrediction(
 
     public enum Direction { INCREASES_RISK, DECREASES_RISK }
 
-    public enum ModelName { LOGISTIC_REGRESSION, RANDOM_FOREST }
+    public enum ModelName { LOGISTIC_REGRESSION, RANDOM_FOREST, XGBOOST }
 
     public enum ExplanationMethod { LINEAR, OCCLUSION }
 

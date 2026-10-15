@@ -18,7 +18,7 @@ répond aux questions via un Assistant RH et estime un risque de turnover (Machi
 
 | Rôle | Fonctionnalités |
 |---|---|
-| Candidat | inscription, profil, import d'un CV PDF analysé automatiquement (NLP), recherche d'offres, score de compatibilité expliqué, candidature et suivi, Assistant RH, dashboard |
+| Candidat | inscription, profil, import d'un CV PDF analysé automatiquement (NLP), résumé professionnel généré par LLM (Gemini), recherche d'offres, score de compatibilité expliqué, candidature et suivi, Assistant RH, dashboard |
 | Recruteur | entreprise, offres (brouillon → publiée → fermée), candidats classés par score, changement de statut, risque de turnover, dashboard |
 | Admin | utilisateurs (activer, désactiver, supprimer), entreprises, offres, état du service IA, risque de turnover, dashboard global |
 
@@ -60,9 +60,9 @@ accessible que depuis la machine locale ; bouton « Authorize » : valeur `AI_IN
 ### 1. Cloner le dépôt
 
 ```powershell
-git clone <URL-du-dépôt> smartrecruit-ai
+git clone https://github.com/emna03/SmartRecruit-AI.git smartrecruit-ai
 cd smartrecruit-ai
-git checkout develop
+git checkout main
 ```
 
 ### 2. Configurer les variables d'environnement
@@ -184,7 +184,8 @@ Angular (4200) ──REST/JWT──> Spring Boot (8080) ──JPA──> MySQL (
                        ├─ CV Parser / NLP
                        ├─ Matching
                        ├─ Chatbot (Assistant RH)
-                       └─ Machine Learning (turnover)
+                       ├─ Machine Learning (turnover)
+                       └─ LLM résumé professionnel (Gemini)
 ```
 
 ## Documentation
@@ -201,6 +202,10 @@ Angular (4200) ──REST/JWT──> Spring Boot (8080) ──JPA──> MySQL (
 | [docs/ai/matching.md](docs/ai/matching.md) | matching : formule, pondérations, exemples, limites, version |
 | [docs/ai/chatbot.md](docs/ai/chatbot.md) | Assistant RH : NLP, intentions, exemples, sécurité, limites |
 | [docs/ai/turnover-ml.md](docs/ai/turnover-ml.md) | Machine Learning : dataset, modèles comparés, métriques réelles, limites, éthique |
+| [docs/ai/llm-professional-summary.md](docs/ai/llm-professional-summary.md) | LLM Gemini : résumé professionnel, prompt engineering, protections |
+| [docs/ai/models.md](docs/ai/models.md) | Les 6 modèles IA (LR, RF, XGBoost, Sentence Transformer, K-Means, Gemini) |
+| [docs/testing/tools-status.md](docs/testing/tools-status.md) | Outils de test du cours : Selenium VALIDÉ ; Diffblue, Tabnine, Mabl, Testim, Applitools à faire |
+| [PROMPTS.md](PROMPTS.md) | prompts de développement (Cursor) vs prompt exécuté par SmartRecruit |
 | [docs/dashboards.md](docs/dashboards.md) | dashboards : KPI, origine des données, autorisations, limites |
 | [docs/git-workflow.md](docs/git-workflow.md), [docs/team-modules.md](docs/team-modules.md) | workflow Git, répartition des modules |
 | [frontend/README.md](frontend/README.md), [ai-service/README.md](ai-service/README.md) | détails du frontend et du service IA |
@@ -215,6 +220,7 @@ smartrecruit-ai/
 │   └── ml/         Entraînement ML hors ligne (dataset et modèle non versionnés, rapport d'évaluation versionné)
 ├── database/       Documentation MySQL et scripts SQL de vérification du schéma
 ├── docs/           Documentation finale, architecture, sécurité, API, IA, guide de démonstration
+├── tests-tools/    Preuves d'outils de test du cours (Selenium VALIDÉ ; autres à faire)
 ├── scripts/        Scripts de test de bout en bout (PowerShell)
 ├── .github/        Modèle de Pull Request
 ├── docker-compose.yml

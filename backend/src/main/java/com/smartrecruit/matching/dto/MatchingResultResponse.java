@@ -17,5 +17,10 @@ public record MatchingResultResponse(
         String explanation,
         String algorithmVersion,
         LocalDateTime computedAt,
-        boolean stale) {
+        boolean stale,
+        /** Similarité sémantique IA [0,1] ; null si non calculée. Indépendante du score métier. */
+        Double semanticSimilarity,
+        /** Score sémantique 0–100 ; null si non calculé. */
+        Double semanticScore,
+        String semanticModel) {
 }

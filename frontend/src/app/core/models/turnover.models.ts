@@ -55,7 +55,7 @@ export interface TurnoverFactor {
 }
 
 export interface TurnoverModelInfo {
-  name: 'LOGISTIC_REGRESSION' | 'RANDOM_FOREST';
+  name: 'LOGISTIC_REGRESSION' | 'RANDOM_FOREST' | 'XGBOOST';
   version: string;
   dataset: string;
   explanationMethod: 'LINEAR' | 'OCCLUSION';

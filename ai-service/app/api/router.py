@@ -2,12 +2,12 @@
 
 - ``/health`` : publique, sans aucune information sensible (supervision, Docker).
 - ``/api/**`` : réservée à Spring Boot, chaque route exige l'en-tête ``X-Internal-Api-Key``.
-  Les routes des modules IA (cv, matching, chatbot, ml) sont ajoutées à ``internal_router``.
+  Les routes des modules IA (cv, matching, chatbot, ml, llm) sont ajoutées à ``internal_router``.
 """
 
 from fastapi import APIRouter, Depends
 
-from app.api.routes import chatbot, cv, health, matching, ml, status
+from app.api.routes import chatbot, clustering, cv, health, llm, matching, ml, semantic, status
 from app.core.security import require_internal_key
 from app.schemas.common import ApiErrorResponse
 
@@ -24,3 +24,6 @@ internal_router.include_router(cv.router)
 internal_router.include_router(matching.router)
 internal_router.include_router(chatbot.router)
 internal_router.include_router(ml.router)
+internal_router.include_router(semantic.router)
+internal_router.include_router(clustering.router)
+internal_router.include_router(llm.router)

@@ -17,3 +17,12 @@ scipy==1.16.3
 scikit-learn==1.7.2
 joblib==1.6.0
 threadpoolctl==3.7.0
+
+# LLM (étape 12.5) : Google Gemini via SDK officiel
+google-genai==2.31.0
+
+# Étape 12.6 ? modèles supplémentaires
+# XGBoost : 3e candidat supervisé pour le turnover (même protocole que LR / RF)
+xgboost==3.0.5
+# Sentence Transformer : modèle pré-entraîné (embeddings) ? pas entraîné par l'équipe
+sentence-transformers==5.1.1

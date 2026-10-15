@@ -28,17 +28,18 @@ import { FieldError } from '../../shared/field-error';
                 <div class="mb-3">
                   <label class="form-label" for="email">Email</label>
                   <input id="email" type="email" class="form-control" formControlName="email" autocomplete="email"
+                         data-testid="login-email"
                          [class.is-invalid]="form.controls.email.touched && form.controls.email.invalid" />
                   <app-field-error [control]="form.controls.email" />
                 </div>
                 <div class="mb-4">
                   <label class="form-label" for="password">Mot de passe</label>
                   <input id="password" type="password" class="form-control" formControlName="password"
-                         autocomplete="current-password"
+                         autocomplete="current-password" data-testid="login-password"
                          [class.is-invalid]="form.controls.password.touched && form.controls.password.invalid" />
                   <app-field-error [control]="form.controls.password" />
                 </div>
-                <button class="btn btn-primary w-100" type="submit" [disabled]="loading()">
+                <button class="btn btn-primary w-100" type="submit" data-testid="login-submit" [disabled]="loading()">
                   @if (loading()) {
                     <span class="spinner-border spinner-border-sm me-2"></span>
                   }

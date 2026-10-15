@@ -10,6 +10,7 @@ import {
   DOCUMENT_LANGUAGE_LABELS,
   EDUCATION_LEVEL_LABELS,
   LANGUAGE_LEVEL_LABELS,
+  ProfessionalSummary,
 } from '../../../core/models';
 import { checkCvFile, CvService, MAX_CV_SIZE_MB } from '../../../core/services/cv.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -126,11 +127,16 @@ export class CandidateCvPage implements OnInit {
   readonly importSkills = signal(true);
   readonly importEducations = signal(true);
   readonly importExperiences = signal(true);
+  readonly generatingSummary = signal(false);
+  readonly professionalSummary = signal<ProfessionalSummary | null>(null);
+  readonly summaryError = signal<string | null>(null);
 
   readonly analysis = computed(() => this.cv()?.analysis ?? null);
   readonly technologyGroups = computed(() => groupByCategory(this.analysis()?.technologies ?? []));
   readonly skillGroups = computed(() => groupByCategory(this.analysis()?.skills ?? []));
-  readonly busy = computed(() => this.analyzing() || this.deleting() || this.importing());
+  readonly busy = computed(
+    () => this.analyzing() || this.deleting() || this.importing() || this.generatingSummary(),
+  );
 
   ngOnInit(): void {
     this.cvService.get().subscribe({
@@ -240,9 +246,27 @@ export class CandidateCvPage implements OnInit {
       });
   }
 
+  generateProfessionalSummary(): void {
+    this.summaryError.set(null);
+    this.generatingSummary.set(true);
+    this.cvService.generateProfessionalSummary().subscribe({
+      next: (summary) => {
+        this.professionalSummary.set(summary);
+        this.generatingSummary.set(false);
+        this.toast.success('Résumé professionnel généré.');
+      },
+      error: (err) => {
+        this.generatingSummary.set(false);
+        this.summaryError.set(errorMessage(err, 'La génération du résumé IA a échoué.'));
+      },
+    });
+  }
+
   private analysisDone(cv: CandidateCv): void {
     this.cv.set(cv);
     this.analyzing.set(false);
+    this.professionalSummary.set(null);
+    this.summaryError.set(null);
     if (cv.parsingStatus === 'TERMINE') {
       this.toast.success('CV analysé avec succès.');
     }

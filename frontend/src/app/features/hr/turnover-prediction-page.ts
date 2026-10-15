@@ -43,6 +43,7 @@ export const RISK_LEVELS: Record<RiskLevel, { label: string; css: string; icon: 
 export const MODEL_NAMES: Record<TurnoverModelInfo['name'], string> = {
   LOGISTIC_REGRESSION: 'Régression logistique',
   RANDOM_FOREST: 'Forêt aléatoire (Random Forest)',
+  XGBOOST: 'XGBoost (gradient boosting)',
 };
 
 /** Erreurs de cohérence entre champs (mêmes règles que Spring Boot et FastAPI). */

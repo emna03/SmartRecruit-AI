@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     ai_cv_max_pages: int = Field(default=10, ge=1, le=50)
     # Dossier du modèle ML produit par « python -m ml.train » (fichiers non versionnés).
     ai_ml_model_dir: Path = SERVICE_DIR / "ml" / "artifacts"
+    # LLM externe (étape 12.5) : optionnel. Absent ⇒ endpoints LLM → 503, le reste du service reste utilisable.
+    llm_provider: str = ""
+    llm_api_key: SecretStr | None = None
+    llm_model: str = ""
+    llm_timeout_seconds: int = Field(default=15, ge=1, le=120)
 
     @field_validator("ai_internal_api_key")
     @classmethod
@@ -58,6 +63,24 @@ class Settings(BaseSettings):
         if level not in {"critical", "error", "warning", "info", "debug"}:
             raise ValueError("AI_LOG_LEVEL doit valoir critical, error, warning, info ou debug")
         return level
+
+    @field_validator("llm_provider")
+    @classmethod
+    def _check_llm_provider(cls, value: str) -> str:
+        provider = value.strip().lower()
+        if provider and provider != "gemini":
+            raise ValueError("LLM_PROVIDER doit être vide ou « gemini »")
+        return provider
+
+    @field_validator("llm_model")
+    @classmethod
+    def _check_llm_model(cls, value: str) -> str:
+        return value.strip()
+
+    @property
+    def llm_configured(self) -> bool:
+        key = self.llm_api_key.get_secret_value().strip() if self.llm_api_key else ""
+        return self.llm_provider == "gemini" and bool(key) and bool(self.llm_model)
 
     @property
     def port(self) -> int:

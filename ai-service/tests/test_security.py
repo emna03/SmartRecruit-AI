@@ -14,7 +14,10 @@ def test_status_with_valid_key(client, auth_headers):
     assert body["service"] == SERVICE_NAME
     assert body["version"] == __version__
     # Sans modèle entraîné chargé, le module ML (étape 11) ne doit pas être annoncé disponible.
-    assert body["modules"] == {"cv_parser": True, "matching": True, "chatbot": True, "ml": False}
+    assert body["modules"] == {
+        "cv_parser": True, "matching": True, "chatbot": True, "ml": False, "llm": False,
+        "semantic": True, "clustering": False,
+    }
 
 
 def test_status_without_key_is_refused(client):

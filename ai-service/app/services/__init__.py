@@ -9,4 +9,7 @@ MODULES: dict[str, bool] = {
     "matching": True,  # étape 9
     "chatbot": True,  # étape 10
     "ml": True,  # étape 11 : annoncé disponible seulement si le modèle entraîné est chargé (voir /api/status)
+    "llm": True,  # étape 12.5 : résumé professionnel Gemini (disponible si LLM_* configuré — voir /api/status)
+    "semantic": True,  # étape 12.6 : Sentence Transformer (disponible si embedder présent)
+    "clustering": True,  # étape 12.6 : K-Means (disponible si modèle entraîné chargé)
 }

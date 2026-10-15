@@ -84,6 +84,16 @@ export interface CvImportResult {
   profile: CandidateProfile;
 }
 
+/** Résumé professionnel généré par le LLM (Gemini), validé côté serveur. */
+export interface ProfessionalSummary {
+  summary: string;
+  keywords: string[];
+  model: string;
+  provider: string;
+  promptVersion: string;
+  source: 'llm';
+}
+
 export const LANGUAGE_LEVEL_LABELS: Record<LanguageLevel, string> = {
   NATIF: 'Langue maternelle',
   BILINGUE: 'Bilingue',

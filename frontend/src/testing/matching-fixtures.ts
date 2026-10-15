@@ -17,6 +17,9 @@ export function matchingResult(overrides: Partial<MatchingResult> = {}): Matchin
     algorithmVersion: '1.0.0',
     computedAt: '2026-10-06T10:00:00',
     stale: false,
+    semanticSimilarity: 0.84,
+    semanticScore: 84,
+    semanticModel: 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2',
     ...overrides,
   };
 }

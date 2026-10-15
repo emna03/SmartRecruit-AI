@@ -19,6 +19,7 @@ from pathlib import Path
 import joblib
 import numpy as np
 import sklearn
+import xgboost
 from sklearn.compose import ColumnTransformer
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -30,6 +31,7 @@ from sklearn.metrics import (
 from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from xgboost import XGBClassifier
 
 from app.core.config import SERVICE_DIR
 from app.services.ml import explain
@@ -45,12 +47,13 @@ from app.services.ml.model import risk_level as _risk_level
 
 logger = logging.getLogger("smartrecruit_ai.ml.training")
 
-MODEL_VERSION = "1.0.0"
+MODEL_VERSION = "1.1.0"
 RANDOM_STATE = 42
 TEST_SIZE = 0.2
 CV_FOLDS = 5
 # Règle de choix fixée avant l'entraînement : meilleur F1 moyen (classe « départ ») en validation croisée ;
-# si l'écart est inférieur à cette tolérance, le modèle le plus explicable (régression logistique) est retenu.
+# si l'écart est inférieur à cette tolérance, le modèle le plus explicable est retenu
+# (régression logistique > forêt aléatoire > XGBoost).
 SELECTION_TOLERANCE = 0.02
 # Niveaux de risque : ÉLEVÉ à partir du seuil de décision du classifieur (0,5, celui des métriques),
 # MOYEN dans la zone d'incertitude juste en dessous, FAIBLE sinon.
@@ -62,7 +65,8 @@ REPORT_PATH = SERVICE_DIR / "ml" / "reports" / "turnover_evaluation.json"
 
 LOGISTIC_REGRESSION = "LOGISTIC_REGRESSION"
 RANDOM_FOREST = "RANDOM_FOREST"
-EXPLAINABILITY_ORDER = (LOGISTIC_REGRESSION, RANDOM_FOREST)
+XGBOOST = "XGBOOST"
+EXPLAINABILITY_ORDER = (LOGISTIC_REGRESSION, RANDOM_FOREST, XGBOOST)
 METRICS = ("accuracy", "precision", "recall", "f1", "roc_auc")
 
 
@@ -74,8 +78,18 @@ class Candidate:
     explanation: str
 
 
-def candidates() -> list[Candidate]:
-    """Deux classifieurs simples et explicables ; ``class_weight`` compense le déséquilibre (16 % de départs)."""
+def scale_pos_weight(y_train) -> float:
+    """Poids de la classe positive calculé uniquement sur le jeu d'entraînement (pas de fuite)."""
+    positives = int(np.sum(y_train == 1))
+    negatives = int(np.sum(y_train == 0))
+    if positives == 0:
+        return 1.0
+    return negatives / positives
+
+
+def candidates(y_train=None) -> list[Candidate]:
+    """Trois classifieurs comparés équitablement ; déséquilibre traité selon le modèle (class_weight / scale_pos_weight)."""
+    pos_weight = scale_pos_weight(y_train) if y_train is not None else 1.0
     return [
         Candidate(
             LOGISTIC_REGRESSION,
@@ -88,6 +102,23 @@ def candidates() -> list[Candidate]:
             RandomForestClassifier(n_estimators=300, class_weight="balanced_subsample", random_state=RANDOM_STATE,
                                    n_jobs=1),
             {"model__max_depth": [4, 8, None], "model__min_samples_leaf": [1, 5, 10]},
+            explain.OCCLUSION,
+        ),
+        Candidate(
+            XGBOOST,
+            XGBClassifier(
+                objective="binary:logistic",
+                eval_metric="logloss",
+                scale_pos_weight=pos_weight,
+                random_state=RANDOM_STATE,
+                n_jobs=1,
+                tree_method="hist",
+            ),
+            {
+                "model__n_estimators": [100, 300],
+                "model__max_depth": [3, 5, 7],
+                "model__learning_rate": [0.05, 0.1],
+            },
             explain.OCCLUSION,
         ),
     ]
@@ -166,19 +197,23 @@ def train(dataset_path: Path = DATASET_PATH, artifacts_dir: Path = ARTIFACTS_DIR
         features, target, test_size=TEST_SIZE, stratify=target, random_state=RANDOM_STATE)
     folds = StratifiedKFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
+    candidate_list = candidates(y_train)
     searches: dict[str, GridSearchCV] = {}
     cv_results: dict[str, dict] = {}
-    for candidate in candidates():
+    for candidate in candidate_list:
         search = GridSearchCV(build_pipeline(candidate.estimator), candidate.grid, cv=folds, n_jobs=1,
                               scoring=list(METRICS), refit="f1")
         search.fit(x_train, y_train)
         best = search.best_index_
         key = {"roc_auc": "rocAuc"}
-        cv_results[candidate.name] = {
+        entry: dict = {
             "bestParams": {name.removeprefix("model__"): value for name, value in search.best_params_.items()},
             "mean": {key.get(m, m): round(float(search.cv_results_[f"mean_test_{m}"][best]), 4) for m in METRICS},
             "std": {key.get(m, m): round(float(search.cv_results_[f"std_test_{m}"][best]), 4) for m in METRICS},
         }
+        if candidate.name == XGBOOST:
+            entry["scalePosWeight"] = round(float(scale_pos_weight(y_train)), 4)
+        cv_results[candidate.name] = entry
         searches[candidate.name] = search
         logger.info("%s : F1 CV %.4f, ROC-AUC CV %.4f, paramètres %s", candidate.name,
                     cv_results[candidate.name]["mean"]["f1"], cv_results[candidate.name]["mean"]["rocAuc"],
@@ -193,7 +228,7 @@ def train(dataset_path: Path = DATASET_PATH, artifacts_dir: Path = ARTIFACTS_DIR
 
     final = searches[chosen].best_estimator_
     test_probabilities = final.predict_proba(x_test)[:, 1]
-    explanation = next(c.explanation for c in candidates() if c.name == chosen)
+    explanation = next(c.explanation for c in candidate_list if c.name == chosen)
     bundle = {
         "pipeline": final,
         "modelName": chosen,
@@ -229,7 +264,7 @@ def train(dataset_path: Path = DATASET_PATH, artifacts_dir: Path = ARTIFACTS_DIR
         "crossValidation": {"folds": CV_FOLDS, "shuffle": True, "randomState": RANDOM_STATE,
                             "selectionMetric": "f1", "results": cv_results},
         "selection": {"chosenModel": chosen, "rule": f"F1 CV maximal ; tolérance {SELECTION_TOLERANCE} en faveur "
-                      "de la régression logistique", "justification": justification},
+                      "du modèle le plus explicable (LR > RF > XGBoost)", "justification": justification},
         "test": {"threshold": HIGH_THRESHOLD, "results": test_results,
                  "baselineMostFrequent": baseline_metrics},
         "riskLevels": {"mediumThreshold": MEDIUM_THRESHOLD, "highThreshold": HIGH_THRESHOLD,
@@ -238,9 +273,11 @@ def train(dataset_path: Path = DATASET_PATH, artifacts_dir: Path = ARTIFACTS_DIR
         "globalInterpretation": {
             LOGISTIC_REGRESSION: top_weights(searches[LOGISTIC_REGRESSION].best_estimator_, "coefficient"),
             RANDOM_FOREST: top_weights(searches[RANDOM_FOREST].best_estimator_, "importance"),
+            XGBOOST: top_weights(searches[XGBOOST].best_estimator_, "importance"),
         },
         "examples": examples,
         "sklearnVersion": sklearn.__version__,
+        "xgboostVersion": xgboost.__version__,
     }
 
     save(bundle, report, artifacts_dir)
@@ -264,6 +301,7 @@ def save(bundle: dict, report: dict, artifacts_dir: Path) -> None:
         "artifactFile": MODEL_FILE,
         "artifactSha256": sha256_of(model_path),
         "sklearnVersion": sklearn.__version__,
+        "xgboostVersion": xgboost.__version__,
         "datasetName": DATASET_NAME,
         "datasetSha256": DATASET_SHA256,
         "features": FEATURES,

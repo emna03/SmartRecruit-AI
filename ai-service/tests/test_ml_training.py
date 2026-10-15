@@ -7,14 +7,18 @@ from app.core.config import SERVICE_DIR
 from app.services.ml.dataset import load_dataset
 from app.services.ml.training import (
     HIGH_THRESHOLD, LOGISTIC_REGRESSION, MEDIUM_THRESHOLD, RANDOM_FOREST, RANDOM_STATE, SELECTION_TOLERANCE,
-    evaluate, risk_level, select_model,
+    XGBOOST, evaluate, risk_level, select_model,
 )
 
 COMMITTED_REPORT = SERVICE_DIR / "ml" / "reports" / "turnover_evaluation.json"
 
 
-def _cv(f1_lr: float, f1_rf: float) -> dict:
-    return {LOGISTIC_REGRESSION: {"mean": {"f1": f1_lr}}, RANDOM_FOREST: {"mean": {"f1": f1_rf}}}
+def _cv(f1_lr: float, f1_rf: float, f1_xgb: float = 0.0) -> dict:
+    return {
+        LOGISTIC_REGRESSION: {"mean": {"f1": f1_lr}},
+        RANDOM_FOREST: {"mean": {"f1": f1_rf}},
+        XGBOOST: {"mean": {"f1": f1_xgb}},
+    }
 
 
 def test_training_is_reproducible_and_matches_the_committed_report(trained_model):
@@ -39,12 +43,14 @@ def test_test_set_is_held_out_stratified_and_never_used_for_model_selection(trai
     assert report["selection"]["chosenModel"] == select_model(report["crossValidation"]["results"])[0]
 
 
-def test_at_least_two_models_are_compared_with_all_required_metrics(trained_model):
+def test_three_models_are_compared_with_all_required_metrics(trained_model):
     _, report = trained_model
 
-    assert set(report["test"]["results"]) == {LOGISTIC_REGRESSION, RANDOM_FOREST}
+    assert set(report["test"]["results"]) == {LOGISTIC_REGRESSION, RANDOM_FOREST, XGBOOST}
+    assert "scalePosWeight" in report["crossValidation"]["results"][XGBOOST]
     for metrics in report["test"]["results"].values():
-        assert {"accuracy", "precision", "recall", "f1", "rocAuc", "confusionMatrix"} <= metrics.keys()
+        assert {"accuracy", "precision", "recall", "f1", "rocAuc", "averagePrecision",
+                "confusionMatrix"} <= metrics.keys()
         matrix = metrics["confusionMatrix"]
         assert sum(matrix.values()) == report["split"]["testRows"]
         assert matrix["truePositives"] + matrix["falseNegatives"] == report["split"]["testDepartures"]
@@ -70,10 +76,12 @@ def test_risk_levels_order_the_real_attrition_rate_on_the_test_set(trained_model
 
 
 def test_selection_rule():
-    assert select_model(_cv(0.40, 0.50))[0] == RANDOM_FOREST
-    assert select_model(_cv(0.50, 0.40))[0] == LOGISTIC_REGRESSION
-    # Écart inférieur à la tolérance : la régression logistique, plus explicable, est retenue.
-    assert select_model(_cv(0.50, 0.50 + SELECTION_TOLERANCE / 2))[0] == LOGISTIC_REGRESSION
+    assert select_model(_cv(0.40, 0.50, 0.35))[0] == RANDOM_FOREST
+    assert select_model(_cv(0.50, 0.40, 0.35))[0] == LOGISTIC_REGRESSION
+    assert select_model(_cv(0.40, 0.45, 0.55))[0] == XGBOOST
+    # Écart inférieur à la tolérance : le modèle le plus explicable parmi le top 2 est retenu.
+    assert select_model(_cv(0.50, 0.50 + SELECTION_TOLERANCE / 2, 0.30))[0] == LOGISTIC_REGRESSION
+    assert select_model(_cv(0.40, 0.50, 0.50 + SELECTION_TOLERANCE / 2))[0] == RANDOM_FOREST
 
 
 def test_evaluate_computes_the_confusion_matrix_and_metrics():

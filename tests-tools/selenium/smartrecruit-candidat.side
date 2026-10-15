@@ -1,0 +1,249 @@
+{
+  "id": "a1b2c3d4-e5f6-4789-a012-3456789abcde",
+  "version": "2.0",
+  "name": "SmartRecruit-Candidat",
+  "url": "http://localhost:4200",
+  "tests": [{
+    "id": "b2c3d4e5-f6a7-4890-b123-456789abcdef",
+    "name": "parcours-candidat-cv-offres",
+    "commands": [
+      {
+        "id": "c00b",
+        "comment": "Ouvrir le site pour pouvoir vider localStorage (IDE 4: pas de deleteAllCookies)",
+        "command": "open",
+        "target": "/",
+        "targets": [],
+        "value": ""
+      },
+      {
+        "id": "c00c",
+        "comment": "Supprimer session JWT + cookies domaine (évite guestGuard)",
+        "command": "executeScript",
+        "target": "localStorage.removeItem('smartrecruit.session'); sessionStorage.clear(); document.cookie.split(';').forEach(function(c){document.cookie=c.replace(/^ +/,'').replace(/=.*/,'=;expires='+new Date(0).toUTCString()+';path=/');});",
+        "targets": [],
+        "value": ""
+      },
+      {
+        "id": "c01",
+        "comment": "Ouvrir la page de connexion",
+        "command": "open",
+        "target": "/login",
+        "targets": [],
+        "value": ""
+      },
+      {
+        "id": "c01b",
+        "comment": "Attendre le champ email (bootstrap Angular SPA)",
+        "command": "waitForElementVisible",
+        "target": "css=[data-testid=\"login-email\"]",
+        "targets": [
+          ["css=[data-testid=\"login-email\"]", "css"],
+          ["id=email", "id"],
+          ["css=#email", "css"]
+        ],
+        "value": "20000"
+      },
+      {
+        "id": "c02",
+        "comment": "Saisir email candidat de test",
+        "command": "type",
+        "target": "css=[data-testid=\"login-email\"]",
+        "targets": [
+          ["css=[data-testid=\"login-email\"]", "css"],
+          ["id=email", "id"],
+          ["css=#email", "css"]
+        ],
+        "value": "selenium.candidat@smartrecruit.test"
+      },
+      {
+        "id": "c02b",
+        "comment": "Attendre le champ mot de passe",
+        "command": "waitForElementVisible",
+        "target": "css=[data-testid=\"login-password\"]",
+        "targets": [
+          ["css=[data-testid=\"login-password\"]", "css"],
+          ["id=password", "id"]
+        ],
+        "value": "10000"
+      },
+      {
+        "id": "c03",
+        "comment": "Saisir mot de passe",
+        "command": "type",
+        "target": "css=[data-testid=\"login-password\"]",
+        "targets": [
+          ["css=[data-testid=\"login-password\"]", "css"],
+          ["id=password", "id"],
+          ["css=#password", "css"]
+        ],
+        "value": "SeleniumTest1!"
+      },
+      {
+        "id": "c03b",
+        "comment": "Attendre le bouton Se connecter",
+        "command": "waitForElementVisible",
+        "target": "css=[data-testid=\"login-submit\"]",
+        "targets": [
+          ["css=[data-testid=\"login-submit\"]", "css"],
+          ["css=button[type=\"submit\"]", "css"]
+        ],
+        "value": "10000"
+      },
+      {
+        "id": "c04",
+        "comment": "Cliquer Se connecter",
+        "command": "click",
+        "target": "css=[data-testid=\"login-submit\"]",
+        "targets": [
+          ["css=[data-testid=\"login-submit\"]", "css"],
+          ["css=button[type=\"submit\"]", "css"]
+        ],
+        "value": ""
+      },
+      {
+        "id": "c05",
+        "comment": "Attendre le menu Mon CV (espace candidat)",
+        "command": "waitForElementVisible",
+        "target": "css=a[href=\"/candidate/cv\"]",
+        "targets": [
+          ["css=a[href=\"/candidate/cv\"]", "css"],
+          ["linkText=Mon CV", "linkText"]
+        ],
+        "value": "20000"
+      },
+      {
+        "id": "c06",
+        "comment": "Assertion : lien Mon CV visible",
+        "command": "assertElementPresent",
+        "target": "css=a[href=\"/candidate/cv\"]",
+        "targets": [],
+        "value": ""
+      },
+      {
+        "id": "c07",
+        "comment": "Aller sur Mon CV",
+        "command": "click",
+        "target": "css=a[href=\"/candidate/cv\"]",
+        "targets": [
+          ["css=a[href=\"/candidate/cv\"]", "css"],
+          ["linkText=Mon CV", "linkText"]
+        ],
+        "value": ""
+      },
+      {
+        "id": "c08",
+        "comment": "Attendre le titre Mon CV",
+        "command": "waitForElementVisible",
+        "target": "css=h1.page-title",
+        "targets": [],
+        "value": "15000"
+      },
+      {
+        "id": "c09",
+        "comment": "Assertion : titre Mon CV",
+        "command": "assertText",
+        "target": "css=h1.page-title",
+        "targets": [],
+        "value": "Mon CV"
+      },
+      {
+        "id": "c10",
+        "comment": "Aller sur Offres (espace candidat)",
+        "command": "click",
+        "target": "css=a[href=\"/candidate/jobs\"]",
+        "targets": [
+          ["css=a[href=\"/candidate/jobs\"]", "css"],
+          ["linkText=Offres", "linkText"]
+        ],
+        "value": ""
+      },
+      {
+        "id": "c11",
+        "comment": "Attendre le champ de recherche",
+        "command": "waitForElementVisible",
+        "target": "css=[data-testid=\"filter-keyword\"]",
+        "targets": [],
+        "value": "15000"
+      },
+      {
+        "id": "c12",
+        "comment": "Assertion : page Offres",
+        "command": "assertText",
+        "target": "css=h1.page-title",
+        "targets": [],
+        "value": "Offres d'emploi"
+      },
+      {
+        "id": "c13",
+        "comment": "Saisir mot-clé Java",
+        "command": "type",
+        "target": "css=[data-testid=\"filter-keyword\"]",
+        "targets": [["css=[data-testid=\"filter-keyword\"]", "css"]],
+        "value": "Java"
+      },
+      {
+        "id": "c14",
+        "comment": "Lancer la recherche",
+        "command": "click",
+        "target": "css=form[role=\"search\"] button[type=\"submit\"]",
+        "targets": [],
+        "value": ""
+      },
+      {
+        "id": "c15",
+        "comment": "Attendre le compteur d'offres",
+        "command": "waitForElementVisible",
+        "target": "css=[data-testid=\"jobs-count\"]",
+        "targets": [],
+        "value": "15000"
+      },
+      {
+        "id": "c16",
+        "comment": "Attendre la carte d'offre",
+        "command": "waitForElementVisible",
+        "target": "css=h3.job-title",
+        "targets": [],
+        "value": "15000"
+      },
+      {
+        "id": "c17",
+        "comment": "Ouvrir l'offre (carte)",
+        "command": "click",
+        "target": "css=a.card.card-hover",
+        "targets": [
+          ["css=a.card.card-hover", "css"],
+          ["css=h3.job-title", "css"]
+        ],
+        "value": ""
+      },
+      {
+        "id": "c18",
+        "comment": "Attendre le détail de l'offre",
+        "command": "waitForElementVisible",
+        "target": "css=[data-testid=\"job-title\"]",
+        "targets": [],
+        "value": "15000"
+      },
+      {
+        "id": "c19",
+        "comment": "Assertion : titre de l'offre affiché",
+        "command": "assertElementPresent",
+        "target": "css=[data-testid=\"job-title\"]",
+        "targets": [],
+        "value": ""
+      }
+    ]
+  }],
+  "suites": [{
+    "id": "d3e4f5a6-b7c8-4901-c234-56789abcdef0",
+    "name": "Default Suite",
+    "persistSession": false,
+    "parallel": false,
+    "timeout": 300,
+    "tests": ["b2c3d4e5-f6a7-4890-b123-456789abcdef"]
+  }],
+  "urls": [
+    "http://localhost:4200/"
+  ],
+  "plugins": []
+}

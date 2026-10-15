@@ -188,6 +188,47 @@ describe('CandidateCvPage', () => {
 
     expect(text('cv-import-result')).toContain('5 compétence(s), 1 formation(s)');
   });
+
+  it('generates an AI professional summary from the analyzed CV', async () => {
+    const { page, fixture, text } = await create(analyzedCv());
+
+    expect(text('cv-ai-disclaimer')).toContain('intelligence artificielle');
+    page.generateProfessionalSummary();
+    fixture.detectChanges();
+    expect(page.generatingSummary()).toBe(true);
+
+    const req = http.expectOne({ method: 'POST', url: `${URL}/professional-summary` });
+    req.flush({
+      summary:
+        'Profil full stack Java Spring Boot Angular avec MySQL et API REST, issu d’une formation d’ingénieur.',
+      keywords: ['Java', 'Spring Boot', 'Angular'],
+      model: 'gemini-3.5-flash-lite',
+      provider: 'gemini',
+      promptVersion: '1.0.0',
+      source: 'llm',
+    });
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(page.generatingSummary()).toBe(false);
+    expect(text('cv-summary-text')).toContain('Java Spring Boot');
+    expect(text('cv-summary-keywords')).toContain('Angular');
+    expect(text('cv-summary-meta')).toContain('gemini-3.5-flash-lite');
+  });
+
+  it('shows a clear error when the AI summary fails', async () => {
+    const { page, fixture, text } = await create(analyzedCv());
+
+    page.generateProfessionalSummary();
+    http.expectOne(`${URL}/professional-summary`).flush(
+      { status: 503, message: 'Le fournisseur LLM est momentanément indisponible. Réessayez plus tard.' },
+      { status: 503, statusText: 'Service Unavailable' },
+    );
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(text('cv-summary-error')).toContain('indisponible');
+  });
 });
 
 describe('CV formatting helpers', () => {

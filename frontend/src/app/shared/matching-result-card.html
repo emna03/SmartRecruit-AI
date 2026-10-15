@@ -4,7 +4,7 @@
       {{ result().score | number: '1.0-1' }}<span class="fs-6"> %</span>
     </div>
     <div>
-      <div class="fw-semibold">Score global</div>
+      <div class="fw-semibold">Matching métier</div>
       <span class="badge text-bg-{{ level().css }}" data-testid="matching-level">{{ level().label }}</span>
       @if (result().stale) {
         <span class="badge text-bg-secondary ms-1" data-testid="matching-stale">
@@ -12,7 +12,22 @@
         </span>
       }
     </div>
+    @if (result().semanticScore !== null && result().semanticScore !== undefined) {
+      <div class="border rounded px-3 py-2 bg-light" data-testid="semantic-score">
+        <div class="small text-secondary">Similarité sémantique IA</div>
+        <div class="fw-semibold fs-5">{{ result().semanticScore | number: '1.0-0' }} %</div>
+        <div class="small text-secondary">
+          cosinus {{ (result().semanticSimilarity ?? 0) | number: '1.0-2' }}
+        </div>
+      </div>
+    }
   </div>
+  @if (result().semanticScore !== null && result().semanticScore !== undefined) {
+    <p class="small text-secondary mb-3" data-testid="semantic-disclaimer">
+      Similarité sémantique calculée à partir des représentations vectorielles du CV et de l'offre
+      (Sentence Transformer pré-entraîné). Ce n'est pas une certitude d'embauche.
+    </p>
+  }
 
   <div class="row g-3 mb-3">
     @for (sub of subScores(); track sub.label) {

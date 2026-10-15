@@ -14,6 +14,17 @@ application-local.yml
 application-local.properties
 application-secret*.yml
 
+# Clés / secrets outils de test cloud (jamais versionner)
+**/applitools.env
+**/.applitools*
+**/APPLITOOLS*
+**/eyes.env
+**/*api*key*.local
+**/secrets/
+**/credentials.json
+**/.mabl/
+**/.testim/
+
 # ---------- Données personnelles (CV uploadés) ----------
 uploads/
 **/uploads/

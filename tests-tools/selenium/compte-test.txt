@@ -1,0 +1,12 @@
+# Compte candidat préparé pour Selenium IDE (données fictives locales)
+# Ne pas utiliser en production.
+
+Email    : selenium.candidat@smartrecruit.test
+Password : SeleniumTest1!
+Role     : CANDIDAT
+
+# Offre publiée pour la recherche
+Titre    : Developpeur Java Selenium
+ID       : 199 (peut varier si recreée)
+Keyword  : Java
+URL liste: http://localhost:4200/candidate/jobs

@@ -1,4 +1,4 @@
-﻿# Vérification réelle de l'ÉTAPE 7 : chaîne Spring Boot -> FastAPI avec la clé interne de .env.
+# Vérification réelle de l'ÉTAPE 7 : chaîne Spring Boot -> FastAPI avec la clé interne de .env.
 #
 # Prérequis : MySQL et le backend démarrés, environnement virtuel ai-service/.venv installé,
 # service IA ARRÊTÉ (le script le démarre et l'arrête lui-même pour tester les pannes).

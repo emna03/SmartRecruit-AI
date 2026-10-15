@@ -1,0 +1,62 @@
+<div class="container py-4" data-testid="clustering-page">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h1 class="h3 mb-1">Clustering des profils (K-Means)</h1>
+      <p class="text-secondary mb-0">
+        Regroupement non supervisé de profils professionnels anonymisés.
+        Les descriptions de clusters sont des interprétations, pas des labels certains.
+      </p>
+    </div>
+    @if (canTrain()) {
+      <button class="btn btn-primary" type="button" (click)="train()" [disabled]="loading()" data-testid="cluster-train">
+        Entraîner / recalculer
+      </button>
+    }
+  </div>
+
+  @if (error()) {
+    <div class="alert alert-warning" role="alert" data-testid="cluster-error">{{ error() }}</div>
+  }
+
+  @if (summary(); as s) {
+    @if (!s.available) {
+      <div class="alert alert-info">Aucun modèle K-Means chargé. Lancez un entraînement (minimum 6 CV analysés).</div>
+    } @else {
+      <div class="row g-3 mb-4">
+        <div class="col-md-3"><div class="border rounded p-3"><div class="small text-secondary">K choisi</div><div class="fs-4 fw-semibold">{{ s.chosenK }}</div></div></div>
+        <div class="col-md-3"><div class="border rounded p-3"><div class="small text-secondary">Silhouette</div><div class="fs-4 fw-semibold">{{ s.silhouette | number: '1.2-3' }}</div></div></div>
+        <div class="col-md-3"><div class="border rounded p-3"><div class="small text-secondary">Profils</div><div class="fs-4 fw-semibold">{{ s.nProfiles }}</div></div></div>
+        <div class="col-md-3"><div class="border rounded p-3"><div class="small text-secondary">Version</div><div class="fs-6 fw-semibold">{{ s.modelVersion }}</div></div></div>
+      </div>
+      <p class="small text-secondary">{{ s.note }}</p>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle" data-testid="cluster-table">
+          <thead>
+            <tr>
+              <th>Cluster</th>
+              <th>Candidats</th>
+              <th>Termes dominants</th>
+              <th>Description (interprétation)</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of s.clusters; track c.clusterId) {
+              <tr>
+                <td><span class="badge text-bg-secondary">{{ c.clusterId }}</span></td>
+                <td>{{ c.size }}</td>
+                <td>{{ c.dominantTerms.join(' / ') || '—' }}</td>
+                <td>{{ c.clusterDescription }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+  @if (lastTrain(); as t) {
+    <div class="alert alert-success small" data-testid="cluster-train-ok">
+      Entraînement terminé : K={{ t.chosenK }}, silhouette={{ t.silhouette | number: '1.2-3' }}, n={{ t.nProfiles }}.
+    </div>
+  }
+</div>

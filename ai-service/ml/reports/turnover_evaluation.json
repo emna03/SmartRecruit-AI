@@ -1,5 +1,5 @@
 {
-  "modelVersion": "1.0.0",
+  "modelVersion": "1.1.0",
   "dataset": {
     "name": "IBM HR Analytics Employee Attrition & Performance",
     "url": "https://raw.githubusercontent.com/IBM/employee-attrition-aif360/master/data/emp_attrition.csv",
@@ -106,13 +106,35 @@
           "f1": 0.0476,
           "rocAuc": 0.0301
         }
+      },
+      "XGBOOST": {
+        "bestParams": {
+          "learning_rate": 0.1,
+          "max_depth": 3,
+          "n_estimators": 100
+        },
+        "mean": {
+          "accuracy": 0.835,
+          "precision": 0.4931,
+          "recall": 0.6053,
+          "f1": 0.5415,
+          "rocAuc": 0.8146
+        },
+        "std": {
+          "accuracy": 0.0256,
+          "precision": 0.0615,
+          "recall": 0.0927,
+          "f1": 0.0696,
+          "rocAuc": 0.0303
+        },
+        "scalePosWeight": 5.1895
       }
     }
   },
   "selection": {
-    "chosenModel": "RANDOM_FOREST",
-    "rule": "F1 CV maximal ; tolérance 0.02 en faveur de la régression logistique",
-    "justification": "Meilleur F1 moyen en validation croisée (écart de 0.0217 avec LOGISTIC_REGRESSION)."
+    "chosenModel": "XGBOOST",
+    "rule": "F1 CV maximal ; tolérance 0.02 en faveur du modèle le plus explicable (LR > RF > XGBoost)",
+    "justification": "Meilleur F1 moyen en validation croisée (écart de 0.0242 avec RANDOM_FOREST)."
   },
   "test": {
     "threshold": 0.5,
@@ -144,6 +166,20 @@
           "falseNegatives": 21,
           "truePositives": 26
         }
+      },
+      "XGBOOST": {
+        "accuracy": 0.7993,
+        "precision": 0.3966,
+        "recall": 0.4894,
+        "f1": 0.4381,
+        "rocAuc": 0.7807,
+        "averagePrecision": 0.4643,
+        "confusionMatrix": {
+          "trueNegatives": 212,
+          "falsePositives": 35,
+          "falseNegatives": 24,
+          "truePositives": 23
+        }
       }
     },
     "baselineMostFrequent": {
@@ -167,21 +203,21 @@
     "bandsOnTestSet": [
       {
         "level": "FAIBLE",
-        "employees": 144,
-        "departures": 8,
-        "observedAttritionRate": 0.0556
+        "employees": 176,
+        "departures": 11,
+        "observedAttritionRate": 0.0625
       },
       {
         "level": "MOYEN",
-        "employees": 92,
+        "employees": 60,
         "departures": 13,
-        "observedAttritionRate": 0.1413
+        "observedAttritionRate": 0.2167
       },
       {
         "level": "ELEVE",
         "employees": 58,
-        "departures": 26,
-        "observedAttritionRate": 0.4483
+        "departures": 23,
+        "observedAttritionRate": 0.3966
       }
     ]
   },
@@ -270,73 +306,116 @@
         "column": "DistanceFromHome",
         "importance": 0.0425
       }
+    ],
+    "XGBOOST": [
+      {
+        "column": "JobLevel",
+        "importance": 0.0848
+      },
+      {
+        "column": "JobRole_Sales Executive",
+        "importance": 0.0594
+      },
+      {
+        "column": "OverTime_No",
+        "importance": 0.0589
+      },
+      {
+        "column": "YearsWithCurrManager",
+        "importance": 0.0493
+      },
+      {
+        "column": "StockOptionLevel",
+        "importance": 0.0485
+      },
+      {
+        "column": "JobRole_Sales Representative",
+        "importance": 0.0452
+      },
+      {
+        "column": "TotalWorkingYears",
+        "importance": 0.0407
+      },
+      {
+        "column": "YearsAtCompany",
+        "importance": 0.0334
+      },
+      {
+        "column": "JobRole_Laboratory Technician",
+        "importance": 0.0331
+      },
+      {
+        "column": "JobRole_Research Scientist",
+        "importance": 0.0305
+      }
     ]
   },
   "examples": {
     "lowRisk": {
-      "source": "Jeu de test, ligne 1290 du fichier CSV (employé fictif)",
+      "source": "Jeu de test, ligne 457 du fichier CSV (employé fictif)",
       "observedAttrition": false,
-      "probability": 0.0786,
+      "probability": 0.0125,
       "riskLevel": "FAIBLE",
       "features": {
-        "distanceFromHome": 2,
-        "education": 2,
-        "environmentSatisfaction": 2,
-        "jobInvolvement": 3,
-        "jobLevel": 2,
-        "jobSatisfaction": 4,
-        "monthlyIncome": 5762,
-        "numCompaniesWorked": 2,
-        "percentSalaryHike": 14,
+        "distanceFromHome": 1,
+        "education": 5,
+        "environmentSatisfaction": 1,
+        "jobInvolvement": 4,
+        "jobLevel": 4,
+        "jobSatisfaction": 3,
+        "monthlyIncome": 16184,
+        "numCompaniesWorked": 4,
+        "percentSalaryHike": 19,
         "performanceRating": 3,
         "relationshipSatisfaction": 3,
         "stockOptionLevel": 1,
-        "totalWorkingYears": 15,
-        "trainingTimesLastYear": 6,
+        "totalWorkingYears": 10,
+        "trainingTimesLastYear": 2,
         "workLifeBalance": 3,
-        "yearsAtCompany": 7,
-        "yearsInCurrentRole": 7,
-        "yearsSinceLastPromotion": 1,
-        "yearsWithCurrManager": 7,
-        "businessTravel": "NON_TRAVEL",
+        "yearsAtCompany": 6,
+        "yearsInCurrentRole": 1,
+        "yearsSinceLastPromotion": 0,
+        "yearsWithCurrManager": 5,
+        "businessTravel": "TRAVEL_RARELY",
         "department": "RESEARCH_DEVELOPMENT",
         "educationField": "MEDICAL",
-        "jobRole": "MANUFACTURING_DIRECTOR",
+        "jobRole": "RESEARCH_DIRECTOR",
         "overTime": false
       }
     },
     "highRisk": {
-      "source": "Jeu de test, ligne 690 du fichier CSV (employé fictif)",
+      "source": "Jeu de test, ligne 913 du fichier CSV (employé fictif)",
       "observedAttrition": true,
-      "probability": 0.9166,
+      "probability": 0.9791,
       "riskLevel": "ELEVE",
       "features": {
-        "distanceFromHome": 21,
-        "education": 3,
-        "environmentSatisfaction": 4,
-        "jobInvolvement": 2,
+        "distanceFromHome": 24,
+        "education": 1,
+        "environmentSatisfaction": 3,
+        "jobInvolvement": 1,
         "jobLevel": 1,
-        "jobSatisfaction": 2,
-        "monthlyIncome": 2121,
+        "jobSatisfaction": 4,
+        "monthlyIncome": 1118,
         "numCompaniesWorked": 1,
-        "percentSalaryHike": 13,
+        "percentSalaryHike": 14,
         "performanceRating": 3,
-        "relationshipSatisfaction": 2,
+        "relationshipSatisfaction": 4,
         "stockOptionLevel": 0,
         "totalWorkingYears": 1,
-        "trainingTimesLastYear": 3,
-        "workLifeBalance": 4,
+        "trainingTimesLastYear": 4,
+        "workLifeBalance": 3,
         "yearsAtCompany": 1,
         "yearsInCurrentRole": 0,
-        "yearsSinceLastPromotion": 0,
+        "yearsSinceLastPromotion": 1,
         "yearsWithCurrManager": 0,
-        "businessTravel": "TRAVEL_RARELY",
+        "businessTravel": "TRAVEL_FREQUENTLY",
         "department": "SALES",
-        "educationField": "OTHER",
+        "educationField": "LIFE_SCIENCES",
         "jobRole": "SALES_REPRESENTATIVE",
         "overTime": true
       }
     }
   },
-  "sklearnVersion": "1.7.2"
+  "sklearnVersion": "1.7.2",
+  "xgboostVersion": "3.0.5"
 }

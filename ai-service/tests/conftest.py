@@ -17,7 +17,8 @@ NO_MODEL_DIR = Path(__file__).parent / "no-ml-model"
 def isolated_environment(monkeypatch):
     """Les tests ne dépendent ni du fichier .env ni des variables AI_* de la machine."""
     for name in ("AI_INTERNAL_API_KEY", "AI_SERVICE_URL", "AI_SERVICE_HOST", "AI_SERVICE_PORT",
-                 "AI_LOG_LEVEL", "AI_DOCS_ENABLED", "MAX_CV_SIZE_MB", "AI_CV_MAX_PAGES", "AI_ML_MODEL_DIR"):
+                 "AI_LOG_LEVEL", "AI_DOCS_ENABLED", "MAX_CV_SIZE_MB", "AI_CV_MAX_PAGES", "AI_ML_MODEL_DIR",
+                 "LLM_PROVIDER", "LLM_API_KEY", "LLM_MODEL", "LLM_TIMEOUT_SECONDS"):
         monkeypatch.delenv(name, raising=False)
 
 

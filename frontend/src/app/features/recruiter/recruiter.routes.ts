@@ -42,4 +42,9 @@ export default [
     loadComponent: () => import('../hr/turnover-prediction-page').then((m) => m.TurnoverPredictionPage),
     title: 'Risque de turnover — Espace recruteur',
   },
+  {
+    path: 'clustering',
+    loadComponent: () => import('../admin/clustering-page').then((m) => m.ClusteringPage),
+    title: 'Clustering K-Means — Espace recruteur',
+  },
 ] satisfies Routes;

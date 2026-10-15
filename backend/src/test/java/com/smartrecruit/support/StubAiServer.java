@@ -29,6 +29,7 @@ public final class StubAiServer implements AutoCloseable {
     private volatile byte[] lastBody;
     private final Map<String, Route> routes = new ConcurrentHashMap<>();
     private final Map<String, AtomicInteger> pathCounts = new ConcurrentHashMap<>();
+    private final Map<String, byte[]> lastBodiesByPath = new ConcurrentHashMap<>();
 
     private record Route(int status, String body) {
     }
@@ -81,6 +82,7 @@ public final class StubAiServer implements AutoCloseable {
         delay(0);
         routes.clear();
         pathCounts.clear();
+        lastBodiesByPath.clear();
         requestCount.set(0);
         lastExchange = null;
         lastBody = null;
@@ -106,6 +108,12 @@ public final class StubAiServer implements AutoCloseable {
         return lastBody == null ? null : new String(lastBody, StandardCharsets.UTF_8);
     }
 
+    /** Dernier corps reçu pour un chemin donné (ex. après plusieurs appels IA). */
+    public String lastBodyFor(String path) {
+        byte[] bytes = lastBodiesByPath.get(path);
+        return bytes == null ? null : new String(bytes, StandardCharsets.UTF_8);
+    }
+
     public byte[] lastBodyBytes() {
         return lastBody;
     }
@@ -121,6 +129,7 @@ public final class StubAiServer implements AutoCloseable {
         String path = exchange.getRequestURI().getPath();
         pathCounts.computeIfAbsent(path, p -> new AtomicInteger()).incrementAndGet();
         lastBody = exchange.getRequestBody().readAllBytes();
+        lastBodiesByPath.put(path, lastBody);
         lastExchange = exchange;
         Route route = routes.getOrDefault(path, new Route(status, body));
         try {

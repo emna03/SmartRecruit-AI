@@ -138,6 +138,48 @@
       </div>
     }
 
+    <!-- Résumé professionnel généré par LLM -->
+    <div class="card mb-4" data-testid="cv-ai-summary">
+      <div class="card-header bg-white section-title d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>
+          <i aria-hidden="true" class="bi bi-stars me-2 text-primary"></i>Résumé professionnel (IA)
+        </span>
+        <button class="btn btn-primary btn-sm" type="button" (click)="generateProfessionalSummary()"
+                [disabled]="busy()" data-testid="cv-generate-summary">
+          @if (generatingSummary()) {
+            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+            Génération…
+          } @else {
+            ✨ {{ professionalSummary() ? 'Régénérer mon résumé' : 'Générer mon résumé avec l’IA' }}
+          }
+        </button>
+      </div>
+      <div class="card-body">
+        <p class="small text-secondary mb-3" data-testid="cv-ai-disclaimer">
+          Résumé généré par intelligence artificielle à partir des informations professionnelles extraites de votre CV.
+          Vérifiez son contenu avant de l’utiliser.
+        </p>
+        @if (summaryError()) {
+          <div class="alert alert-danger mb-0" role="alert" data-testid="cv-summary-error">{{ summaryError() }}</div>
+        } @else if (professionalSummary(); as summary) {
+          <p class="mb-3" data-testid="cv-summary-text">{{ summary.summary }}</p>
+          <div class="d-flex flex-wrap gap-2 mb-2" data-testid="cv-summary-keywords">
+            @for (keyword of summary.keywords; track keyword) {
+              <span class="skill-badge tech">{{ keyword }}</span>
+            }
+          </div>
+          <div class="small text-secondary" data-testid="cv-summary-meta">
+            Modèle {{ summary.model }} · prompt {{ summary.promptVersion }}
+          </div>
+        } @else if (!generatingSummary()) {
+          <p class="text-secondary small mb-0">
+            Cliquez sur le bouton pour demander à Gemini un résumé de 3 à 4 phrases et des mots-clés,
+            sans envoyer votre nom ni votre CV PDF.
+          </p>
+        }
+      </div>
+    </div>
+
     <!-- Compétences -->
     <div class="card mb-4" data-testid="cv-skills">
       <div class="card-header bg-white section-title">

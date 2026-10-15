@@ -38,7 +38,8 @@ def test_valid_prediction_returns_score_level_factors_and_real_model_metrics(ml_
     chosen = report["selection"]["chosenModel"]
     metrics = report["test"]["results"][chosen]
     assert body["model"] == {
-        "name": chosen, "version": "1.0.0", "dataset": "IBM HR Analytics Employee Attrition & Performance",
+        "name": chosen, "version": report["modelVersion"],
+        "dataset": "IBM HR Analytics Employee Attrition & Performance",
         "explanationMethod": report["explanation"], "testAccuracy": metrics["accuracy"],
         "testPrecision": metrics["precision"], "testRecall": metrics["recall"], "testF1": metrics["f1"],
         "testRocAuc": metrics["rocAuc"],
@@ -142,7 +143,9 @@ def test_without_trained_model_the_route_answers_503_and_status_hides_the_module
 
 def test_status_announces_the_ml_module_when_the_model_is_loaded(ml_client):
     assert ml_client.get("/api/status", headers=HEADERS).json()["modules"] == {
-        "cv_parser": True, "matching": True, "chatbot": True, "ml": True}
+        "cv_parser": True, "matching": True, "chatbot": True, "ml": True, "llm": False,
+        "semantic": True, "clustering": False,
+    }
 
 
 def test_logs_contain_the_score_but_never_the_employee_data(ml_client, examples, caplog):

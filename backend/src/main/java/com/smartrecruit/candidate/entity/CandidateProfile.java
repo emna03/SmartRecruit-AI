@@ -60,6 +60,16 @@ public class CandidateProfile extends AuditableEntity {
     @Column(name = "education_level", length = 30)
     private EducationLevel educationLevel;
 
+    /** Cluster K-Means (interprétation non certaine) ; null si non attribué. */
+    @Column(name = "cluster_id")
+    private Integer clusterId;
+
+    @Column(name = "cluster_description", length = 255)
+    private String clusterDescription;
+
+    @Column(name = "cluster_assigned_at")
+    private java.time.LocalDateTime clusterAssignedAt;
+
     /** Compétences déclarées manuellement par le candidat. */
     @ManyToMany
     @JoinTable(name = "candidate_skills",

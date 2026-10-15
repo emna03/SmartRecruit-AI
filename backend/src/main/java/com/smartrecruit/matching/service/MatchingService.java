@@ -19,11 +19,13 @@ import com.smartrecruit.joboffer.entity.JobOfferStatus;
 import com.smartrecruit.joboffer.repository.JobOfferRepository;
 import com.smartrecruit.joboffer.service.JobOfferService;
 import com.smartrecruit.matching.dto.AiMatchingResult;
+import com.smartrecruit.matching.dto.AiSemanticMatchingResult;
 import com.smartrecruit.matching.dto.CandidateMatchingResponse;
 import com.smartrecruit.matching.dto.CandidateMatchingResponse.Status;
 import com.smartrecruit.matching.dto.MatchingRefreshResponse;
 import com.smartrecruit.matching.dto.MatchingRequest;
 import com.smartrecruit.matching.dto.MatchingResultResponse;
+import com.smartrecruit.matching.dto.SemanticMatchingRequest;
 import com.smartrecruit.matching.entity.MatchingResult;
 import com.smartrecruit.matching.repository.MatchingResultRepository;
 import com.smartrecruit.skill.service.SkillService;
@@ -54,6 +56,7 @@ import java.util.stream.Stream;
 public class MatchingService {
 
     static final String SCORE_PATH = "/api/matching/score";
+    static final String SEMANTIC_PATH = "/api/ml/semantic-matching";
     static final int MAX_CANDIDATE_SKILLS = 400;
 
     static final String COMPUTED_MESSAGE = "Score calculé à partir de votre CV analysé. Il s'agit d'une aide "
@@ -124,7 +127,8 @@ public class MatchingService {
             return new CandidateMatchingResponse(Status.IA_INDISPONIBLE,
                     previous == null ? AI_DOWN_MESSAGE : AI_DOWN_WITH_PREVIOUS, previous);
         }
-        MatchingResultResponse saved = save(prepared.candidateId(), offerId, result);
+        AiSemanticMatchingResult semantic = trySemantic(prepared.candidateId(), offerId);
+        MatchingResultResponse saved = save(prepared.candidateId(), offerId, result, semantic);
         return new CandidateMatchingResponse(Status.CALCULE, COMPUTED_MESSAGE, saved);
     }
 
@@ -165,7 +169,8 @@ public class MatchingService {
         int computed = 0;
         for (CandidateInput candidate : plan.candidates()) {
             AiMatchingResult result = score(new MatchingRequest(candidate.input(), plan.offer()));
-            save(candidate.candidateId(), offerId, result);
+            AiSemanticMatchingResult semantic = trySemantic(candidate.candidateId(), offerId);
+            save(candidate.candidateId(), offerId, result, semantic);
             computed++;
         }
         log.info("Scores recalculés pour l'offre {} : {} candidats, {} sans CV analysé", offerId, computed,
@@ -197,6 +202,56 @@ public class MatchingService {
         return aiClient.post(SCORE_PATH, request, AiMatchingResult.class);
     }
 
+    /**
+     * Similarité sémantique indépendante du score métier. Échec soft : le matching 60/25/15 reste valide.
+     */
+    private AiSemanticMatchingResult trySemantic(Long candidateId, Long offerId) {
+        try {
+            return readOnlyTransaction.execute(status -> {
+                CandidateProfile profile = candidateProfileRepository.findById(candidateId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Candidat introuvable"));
+                JobOffer offer = jobOfferRepository.findById(offerId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Offre introuvable"));
+                return cvService.analysisOf(profile.getCv())
+                        .map(analysis -> aiClient.post(SEMANTIC_PATH, toSemanticRequest(analysis, offer),
+                                AiSemanticMatchingResult.class))
+                        .orElse(null);
+            });
+        } catch (RuntimeException ex) {
+            log.warn("Matching sémantique indisponible (candidat {}, offre {}) : {}", candidateId, offerId,
+                    ex.getClass().getSimpleName());
+            return null;
+        }
+    }
+
+    static SemanticMatchingRequest toSemanticRequest(CvParseResult analysis, JobOffer offer) {
+        List<SemanticMatchingRequest.Education> educations = analysis.educations().stream()
+                .map(e -> new SemanticMatchingRequest.Education(
+                        e.degree(), e.fieldOfStudy(), e.institution(),
+                        e.level() == null ? null : e.level().name()))
+                .toList();
+        List<SemanticMatchingRequest.Experience> experiences = analysis.experiences().stream()
+                .map(e -> new SemanticMatchingRequest.Experience(
+                        e.jobTitle(), e.company(), e.durationMonths(), e.description()))
+                .toList();
+        List<SemanticMatchingRequest.Language> languages = analysis.languages().stream()
+                .map(l -> new SemanticMatchingRequest.Language(l.name(), l.level(), l.cefr()))
+                .toList();
+        String highest = analysis.highestEducationLevel() == null ? null : analysis.highestEducationLevel().name();
+        String offerEducation = offer.getEducationLevel() == null ? null : offer.getEducationLevel().name();
+        return new SemanticMatchingRequest(
+                new SemanticMatchingRequest.Candidate(
+                        analysis.skills().stream().map(CvParseResult.DetectedSkill::name).distinct().toList(),
+                        analysis.technologies().stream().map(CvParseResult.DetectedSkill::name).distinct().toList(),
+                        educations, experiences, languages, analysis.totalExperienceMonths(), highest),
+                new SemanticMatchingRequest.Offer(
+                        offer.getTitle(),
+                        SkillService.names(offer.getRequiredSkills()),
+                        offer.getDescription() == null ? "" : offer.getDescription(),
+                        offer.getMinExperienceYears(),
+                        offerEducation));
+    }
+
     private Optional<MatchingRequest.Candidate> candidateInput(Cv cv) {
         return cvService.analysisOf(cv).map(analysis -> new MatchingRequest.Candidate(
                 Stream.concat(analysis.technologies().stream(), analysis.skills().stream())
@@ -216,19 +271,22 @@ public class MatchingService {
     }
 
     /** Enregistre (ou remplace) le résultat du couple candidat/offre ; une seconde tentative en cas de course. */
-    private MatchingResultResponse save(Long candidateId, Long offerId, AiMatchingResult result) {
+    private MatchingResultResponse save(Long candidateId, Long offerId, AiMatchingResult result,
+                                        AiSemanticMatchingResult semantic) {
         MatchingResultResponse saved;
         try {
-            saved = transaction.execute(status -> upsert(candidateId, offerId, result));
+            saved = transaction.execute(status -> upsert(candidateId, offerId, result, semantic));
         } catch (DataIntegrityViolationException ex) {
-            saved = transaction.execute(status -> upsert(candidateId, offerId, result));
+            saved = transaction.execute(status -> upsert(candidateId, offerId, result, semantic));
         }
-        log.info("Matching enregistré (candidat {}, offre {}) : score {}, version {}", candidateId, offerId,
-                result.score(), result.algorithmVersion());
+        log.info("Matching enregistré (candidat {}, offre {}) : score={}, sémantique={}, version={}",
+                candidateId, offerId, result.score(),
+                semantic == null ? null : semantic.semanticScore(), result.algorithmVersion());
         return saved;
     }
 
-    private MatchingResultResponse upsert(Long candidateId, Long offerId, AiMatchingResult result) {
+    private MatchingResultResponse upsert(Long candidateId, Long offerId, AiMatchingResult result,
+                                          AiSemanticMatchingResult semantic) {
         CandidateProfile profile = candidateProfileRepository.findById(candidateId)
                 .orElseThrow(() -> new ResourceNotFoundException("Candidat introuvable"));
         MatchingResult entity = matchingResultRepository.findByCandidateIdAndJobOfferId(candidateId, offerId)
@@ -238,7 +296,7 @@ public class MatchingService {
                     created.setJobOffer(jobOfferRepository.getReferenceById(offerId));
                     return created;
                 });
-        mapper.apply(entity, result);
+        mapper.apply(entity, result, semantic);
         return mapper.toResponse(matchingResultRepository.saveAndFlush(entity), profile.getCv());
     }
 

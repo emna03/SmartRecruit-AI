@@ -28,6 +28,11 @@ export interface MatchingResult {
   computedAt: string;
   /** Le CV a changé depuis le calcul. */
   stale: boolean;
+  /** Similarité sémantique Sentence Transformer [0, 1] ; indépendante du score métier. */
+  semanticSimilarity: number | null;
+  /** Score sémantique 0–100 ; null si non calculé. */
+  semanticScore: number | null;
+  semanticModel: string | null;
 }
 
 export type CandidateMatchingStatus = 'CALCULE' | 'CV_ABSENT' | 'CV_NON_ANALYSE' | 'IA_INDISPONIBLE';

@@ -45,8 +45,12 @@ class MatchingApiTest extends ApiTestSupport {
     private static final Path UPLOADS = createUploadDir();
     private static final String PARSE = "/api/cv/parse";
     private static final String SCORE = "/api/matching/score";
+    private static final String SEMANTIC = "/api/ml/semantic-matching";
     private static final byte[] PDF = "%PDF-1.4\n% CV fictif de test\n%%EOF\n".getBytes(StandardCharsets.US_ASCII);
     private static final String PARSE_RESULT = resource("/cv/parse-result.json");
+    private static final String SEMANTIC_OK = """
+            {"semanticSimilarity":0.84,"semanticScore":84,"model":"sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2","version":"1.0.0","provider":"sentence-transformers"}
+            """;
 
     /** Offre Java, Spring Boot, Docker (2 ans, Bac+5) et CV de test (Java, Spring Boot, 50 mois, Bac+5). */
     private static final String HIGH = result(80.0, 66.7, 100.0, 100.0, 3,
@@ -75,6 +79,7 @@ class MatchingApiTest extends ApiTestSupport {
         AI.reset();
         AI.respondTo(PARSE, 200, PARSE_RESULT);
         AI.respondTo(SCORE, 200, HIGH);
+        AI.respondTo(SEMANTIC, 200, SEMANTIC_OK);
     }
 
     @Test
@@ -96,14 +101,19 @@ class MatchingApiTest extends ApiTestSupport {
                 .andExpect(jsonPath("$.result.missingSkills").value(contains("Docker")))
                 .andExpect(jsonPath("$.result.algorithmVersion").value("1.0.0"))
                 .andExpect(jsonPath("$.result.explanation").value(containsString("Score global")))
-                .andExpect(jsonPath("$.result.stale").value(false));
+                .andExpect(jsonPath("$.result.stale").value(false))
+                .andExpect(jsonPath("$.result.semanticScore").value(84))
+                .andExpect(jsonPath("$.result.semanticSimilarity").value(0.84));
 
-        String sent = AI.lastBody();
-        assertThat(AI.lastPath()).isEqualTo(SCORE);
+        assertThat(AI.requestCount(SCORE)).isGreaterThanOrEqualTo(1);
+        assertThat(AI.requestCount(SEMANTIC)).isGreaterThanOrEqualTo(1);
+        String sent = AI.lastBodyFor(SCORE);
         assertThat(sent).contains("\"skills\":[\"Java\",\"Spring Boot\",\"Angular\",\"MySQL\",\"API REST\",\"Scrum\"]")
                 .contains("\"experienceMonths\":50", "\"educationLevel\":\"BAC_PLUS_5\"")
                 .contains("\"requiredSkills\":[\"Docker\",\"Java\",\"Spring Boot\"]", "\"minExperienceYears\":2")
                 .doesNotContain("alice@test.com", "Camille", "Tunis", "Test", "firstName", "text");
+        assertThat(AI.lastBodyFor(SEMANTIC))
+                .doesNotContain("alice@test.com", "Camille", "firstName", "email");
 
         MatchingResult stored = storedResult("alice@test.com", offer);
         assertThat(stored.getScore()).isEqualByComparingTo(new BigDecimal("80.00"));
@@ -112,6 +122,8 @@ class MatchingApiTest extends ApiTestSupport {
         assertThat(stored.getMissingSkills()).isEqualTo("[\"Docker\"]");
         assertThat(stored.getAlgorithmVersion()).isEqualTo("1.0.0");
         assertThat(stored.getComputedAt()).isNotNull();
+        assertThat(stored.getSemanticScore()).isEqualByComparingTo(new BigDecimal("84.00"));
+        assertThat(stored.getSemanticModel()).contains("sentence-transformers");
 
         AI.respondTo(SCORE, 200, result(90.0, 83.3, 100.0, 100.0, 3,
                 matched("Java", "Java", "EXACT", 1.0) + "," + matched("Spring Boot", "Spring Boot", "EXACT", 1.0)

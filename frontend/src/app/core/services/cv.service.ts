@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { catchError, Observable, of, throwError } from 'rxjs';
 import { API_URL } from '../api.config';
-import { CandidateCv, CvImportRequest, CvImportResult } from '../models';
+import { CandidateCv, CvImportRequest, CvImportResult, ProfessionalSummary } from '../models';
 
 /** Taille maximale d'un CV (identique à MAX_CV_SIZE_MB côté serveur, qui reste seul juge). */
 export const MAX_CV_SIZE_MB = 5;
@@ -35,6 +35,11 @@ export class CvService {
 
   importIntoProfile(request: CvImportRequest): Observable<CvImportResult> {
     return this.http.post<CvImportResult>(`${this.base}/import`, request);
+  }
+
+  /** Résumé professionnel généré par Gemini à partir des données déjà extraites du CV. */
+  generateProfessionalSummary(): Observable<ProfessionalSummary> {
+    return this.http.post<ProfessionalSummary>(`${this.base}/professional-summary`, null);
   }
 
   delete(): Observable<void> {

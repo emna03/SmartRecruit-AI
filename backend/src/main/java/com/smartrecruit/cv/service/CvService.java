@@ -14,6 +14,8 @@ import com.smartrecruit.cv.dto.CvImportRequest;
 import com.smartrecruit.cv.dto.CvImportResponse;
 import com.smartrecruit.cv.dto.CvParseResult;
 import com.smartrecruit.cv.dto.CvResponse;
+import com.smartrecruit.cv.dto.ProfessionalSummaryAiRequest;
+import com.smartrecruit.cv.dto.ProfessionalSummaryResponse;
 import com.smartrecruit.cv.entity.Cv;
 import com.smartrecruit.cv.entity.CvParsingStatus;
 import com.smartrecruit.cv.repository.CvRepository;
@@ -35,6 +37,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -58,8 +61,11 @@ import java.util.function.Function;
 public class CvService {
 
     static final String PARSE_PATH = "/api/cv/parse";
+    static final String SUMMARY_PATH = "/api/llm/professional-summary";
     static final String NO_CV_MESSAGE = "Aucun CV importé";
     static final String NOT_ANALYZED_MESSAGE = "Le CV n'a pas encore été analysé : relancez l'analyse avant l'import.";
+    static final String SUMMARY_REQUIRES_ANALYSIS =
+            "Le CV n'a pas encore été analysé : relancez l'analyse avant de générer un résumé IA.";
     static final int MAX_PROFILE_SKILLS = 50;
 
     private final CvRepository cvRepository;
@@ -301,6 +307,49 @@ public class CvService {
             return Optional.empty();
         }
         return Optional.ofNullable(readAnalysis(cv));
+    }
+
+    /**
+     * Résumé professionnel généré par le LLM à partir des données structurées déjà extraites.
+     * Le PDF et l'identité du candidat ne quittent jamais Spring Boot.
+     */
+    public ProfessionalSummaryResponse generateProfessionalSummary(Long userId) {
+        CvParseResult analysis = readOnlyTransaction.execute(status -> {
+            Cv cv = findCv(userId);
+            if (cv.getParsingStatus() != CvParsingStatus.TERMINE) {
+                throw new BadRequestException(SUMMARY_REQUIRES_ANALYSIS);
+            }
+            CvParseResult result = readAnalysis(cv);
+            if (result == null) {
+                throw new BadRequestException(SUMMARY_REQUIRES_ANALYSIS);
+            }
+            return result;
+        });
+        ProfessionalSummaryAiRequest request = toLlmRequest(analysis);
+        ProfessionalSummaryResponse response = aiClient.post(SUMMARY_PATH, request, ProfessionalSummaryResponse.class);
+        log.info("Résumé LLM généré (utilisateur {}) : modèle={}, mots-clés={}", userId, response.model(),
+                response.keywords().size());
+        return response;
+    }
+
+    static ProfessionalSummaryAiRequest toLlmRequest(CvParseResult analysis) {
+        List<String> skills = analysis.skills().stream().map(CvParseResult.DetectedSkill::name).distinct().toList();
+        List<String> technologies = analysis.technologies().stream().map(CvParseResult.DetectedSkill::name)
+                .distinct().toList();
+        List<ProfessionalSummaryAiRequest.Education> educations = analysis.educations().stream()
+                .map(e -> new ProfessionalSummaryAiRequest.Education(
+                        e.degree(), e.fieldOfStudy(), e.institution(),
+                        e.level() == null ? null : e.level().name()))
+                .toList();
+        List<ProfessionalSummaryAiRequest.Experience> experiences = analysis.experiences().stream()
+                .map(e -> new ProfessionalSummaryAiRequest.Experience(e.jobTitle(), e.company(), e.durationMonths()))
+                .toList();
+        List<ProfessionalSummaryAiRequest.Language> languages = analysis.languages().stream()
+                .map(l -> new ProfessionalSummaryAiRequest.Language(l.name(), l.level(), l.cefr()))
+                .toList();
+        String highest = analysis.highestEducationLevel() == null ? null : analysis.highestEducationLevel().name();
+        return new ProfessionalSummaryAiRequest(skills, technologies, educations, experiences, languages,
+                analysis.totalExperienceMonths(), highest);
     }
 
     private CvParseResult readAnalysis(Cv cv) {

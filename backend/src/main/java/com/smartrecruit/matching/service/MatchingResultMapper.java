@@ -3,6 +3,7 @@ package com.smartrecruit.matching.service;
 import com.smartrecruit.cv.entity.Cv;
 import com.smartrecruit.cv.entity.CvParsingStatus;
 import com.smartrecruit.matching.dto.AiMatchingResult;
+import com.smartrecruit.matching.dto.AiSemanticMatchingResult;
 import com.smartrecruit.matching.dto.MatchedSkill;
 import com.smartrecruit.matching.dto.MatchingResultResponse;
 import com.smartrecruit.matching.entity.MatchingResult;
@@ -30,7 +31,7 @@ public class MatchingResultMapper {
 
     private final ObjectMapper objectMapper;
 
-    public void apply(MatchingResult entity, AiMatchingResult result) {
+    public void apply(MatchingResult entity, AiMatchingResult result, AiSemanticMatchingResult semantic) {
         entity.setScore(decimal(result.score()));
         entity.setSkillsScore(decimal(result.skillsScore()));
         entity.setExperienceScore(decimal(result.experienceScore()));
@@ -40,6 +41,16 @@ public class MatchingResultMapper {
         entity.setExplanation(result.explanation());
         entity.setAlgorithmVersion(result.algorithmVersion());
         entity.setComputedAt(LocalDateTime.now(ZoneOffset.UTC));
+        if (semantic != null) {
+            entity.setSemanticSimilarity(decimal(semantic.semanticSimilarity()));
+            entity.setSemanticScore(decimal(semantic.semanticScore() == null ? null
+                    : semantic.semanticScore().doubleValue()));
+            entity.setSemanticModel(semantic.model());
+        } else {
+            entity.setSemanticSimilarity(null);
+            entity.setSemanticScore(null);
+            entity.setSemanticModel(null);
+        }
     }
 
     /** {@code cv} : CV actuel du candidat, pour signaler un score calculé avant sa dernière analyse. */
@@ -50,7 +61,8 @@ public class MatchingResultMapper {
         return new MatchingResultResponse(entity.getScore().doubleValue(), number(entity.getSkillsScore()),
                 number(entity.getExperienceScore()), number(entity.getEducationScore()),
                 read(entity, entity.getMatchedSkills(), MATCHED), read(entity, entity.getMissingSkills(), NAMES),
-                entity.getExplanation(), entity.getAlgorithmVersion(), entity.getComputedAt(), isStale(entity, cv));
+                entity.getExplanation(), entity.getAlgorithmVersion(), entity.getComputedAt(), isStale(entity, cv),
+                number(entity.getSemanticSimilarity()), number(entity.getSemanticScore()), entity.getSemanticModel());
     }
 
     static boolean isStale(MatchingResult entity, Cv cv) {

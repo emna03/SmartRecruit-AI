@@ -50,7 +50,10 @@ describe('MatchingResultCard', () => {
   });
 
   it('never presents the score as a hiring decision', () => {
-    expect(render(matchingResult())('matching-disclaimer')).toContain('ne constitue pas une décision de recrutement');
+    const candidate = render(matchingResult());
+    expect(candidate('matching-disclaimer')).toContain('ne constitue pas une décision de recrutement');
+    expect(candidate('semantic-score')).toContain('84');
+    expect(candidate('semantic-disclaimer')).toContain('représentations vectorielles');
     TestBed.resetTestingModule();
     const recruiter = render(matchingResult(), 'recruiter')('matching-disclaimer');
     expect(recruiter).toContain('Aide à la décision uniquement');

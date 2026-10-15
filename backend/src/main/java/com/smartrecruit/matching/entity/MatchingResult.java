@@ -77,4 +77,15 @@ public class MatchingResult extends BaseEntity {
 
     @Column(name = "computed_at", nullable = false)
     private LocalDateTime computedAt;
+
+    /** Similarité cosinus Sentence Transformer [0, 1] ; null si indisponible. */
+    @Column(name = "semantic_similarity", precision = 6, scale = 4)
+    private BigDecimal semanticSimilarity;
+
+    /** Score sémantique 0–100 ; indépendant du score métier 60/25/15. */
+    @Column(name = "semantic_score", precision = 5, scale = 2)
+    private BigDecimal semanticScore;
+
+    @Column(name = "semantic_model", length = 120)
+    private String semanticModel;
 }

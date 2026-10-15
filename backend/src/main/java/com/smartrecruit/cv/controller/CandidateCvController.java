@@ -3,6 +3,7 @@ package com.smartrecruit.cv.controller;
 import com.smartrecruit.cv.dto.CvImportRequest;
 import com.smartrecruit.cv.dto.CvImportResponse;
 import com.smartrecruit.cv.dto.CvResponse;
+import com.smartrecruit.cv.dto.ProfessionalSummaryResponse;
 import com.smartrecruit.cv.service.CvService;
 import com.smartrecruit.security.AppUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +51,15 @@ public class CandidateCvController {
     public CvImportResponse importIntoProfile(@AuthenticationPrincipal AppUserDetails user,
                                               @RequestBody CvImportRequest request) {
         return cvService.importIntoProfile(user.getId(), request);
+    }
+
+    /**
+     * Génère un résumé professionnel via le LLM (Gemini), à partir des données déjà extraites du CV.
+     * Aucune identité ni PDF n'est transmis au fournisseur.
+     */
+    @PostMapping("/professional-summary")
+    public ProfessionalSummaryResponse professionalSummary(@AuthenticationPrincipal AppUserDetails user) {
+        return cvService.generateProfessionalSummary(user.getId());
     }
 
     @DeleteMapping

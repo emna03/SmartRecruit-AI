@@ -30,6 +30,7 @@ const RECRUITER_SPACE: SpaceConfig = {
     { path: '/recruiter/jobs', label: 'Mes offres', icon: 'bi-list-task' },
     { path: '/recruiter/jobs/create', label: 'Nouvelle offre', icon: 'bi-plus-circle' },
     { path: '/recruiter/turnover', label: 'Risque de turnover', icon: 'bi-graph-up-arrow' },
+    { path: '/recruiter/clustering', label: 'Clustering K-Means', icon: 'bi-diagram-3' },
   ],
 };
 
@@ -42,6 +43,7 @@ const ADMIN_SPACE: SpaceConfig = {
     { path: '/admin/companies', label: 'Entreprises', icon: 'bi-building' },
     { path: '/admin/jobs', label: 'Offres', icon: 'bi-list-task' },
     { path: '/admin/turnover', label: 'Risque de turnover', icon: 'bi-graph-up-arrow' },
+    { path: '/admin/clustering', label: 'Clustering K-Means', icon: 'bi-diagram-3' },
   ],
 };
 
