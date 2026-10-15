@@ -6,14 +6,6 @@ Application web de recrutement : les entreprises publient des offres, les candid
 et un module d'IA analyse les CV, calcule un score de compatibilité explicable avec les offres,
 répond aux questions via un Assistant RH et estime un risque de turnover (Machine Learning).
 
-> **État du projet : étapes 1 à 13 terminées** — architecture, MySQL + Spring Boot, entités JPA, JWT + rôles,
-> profils / entreprises / offres / candidatures, frontend Angular, service IA FastAPI, CV Parser + NLP, matching
-> CV ↔ offre, Assistant RH, Machine Learning (turnover), dashboards, puis finalisation (audit, tests de
-> non-régression, sécurité, documentation, guide de démonstration).
-
-**Pour comprendre le projet en 10 minutes : [docs/project-overview.md](docs/project-overview.md).**
-**Pour la soutenance : [docs/demo-guide.md](docs/demo-guide.md).**
-
 ## Fonctionnalités
 
 | Rôle | Fonctionnalités |
@@ -35,12 +27,7 @@ répond aux questions via un Assistant RH et estime un risque de turnover (Machi
 
 Versions exactes : `backend/pom.xml`, `ai-service/requirements.txt`, `frontend/package.json`.
 
-## Prérequis
 
-- Git, **Docker Desktop** (pour MySQL), **JDK 21**, **Python 3.13**, **Node.js** (voir versions ci-dessus).
-- Microsoft Edge (utilisé par les tests Playwright) — facultatif pour lancer l'application.
-- Les commandes ci-dessous sont pour Windows (PowerShell) ; sous Linux/macOS, remplacer `mvnw.cmd` par `./mvnw` et
-  `.venv\Scripts\python.exe` par `.venv/bin/python`.
 
 ## Démarrage en une commande
 
