@@ -65,26 +65,6 @@ cd smartrecruit-ai
 git checkout main
 ```
 
-### 2. Configurer les variables d'environnement
-
-```powershell
-Copy-Item .env.example .env
-```
-
-Puis éditer `.env` (jamais commité) :
-
-| Variable | À renseigner |
-|---|---|
-| `DB_PASSWORD`, `DB_ROOT_PASSWORD` | mots de passe MySQL de votre choix |
-| `JWT_SECRET` | au moins 32 caractères aléatoires |
-| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | compte administrateur créé au premier démarrage |
-| `AI_INTERNAL_API_KEY` | au moins 16 caractères aléatoires (clé partagée Spring Boot ↔ FastAPI) |
-
-Générer des valeurs aléatoires en PowerShell :
-`[Convert]::ToBase64String((1..48 | ForEach-Object { Get-Random -Maximum 256 }))`.
-Si le port 3306 ou 8080 est déjà occupé sur votre machine, changer `DB_PORT` ou `SERVER_PORT` dans `.env`
-(le reste de la configuration suit automatiquement).
-
 ### 3. Démarrer MySQL (Docker)
 
 ```powershell
