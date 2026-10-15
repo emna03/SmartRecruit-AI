@@ -1,4 +1,4 @@
-# Guide de démonstration — SmartRecruit AI (soutenance)
+# Guide de démonstration — SmartRecruit AI
 
 Scénario de **10 à 12 minutes** qui montre toute la chaîne : Angular → Spring Boot → MySQL, et Spring Boot → FastAPI
 pour les quatre modules d'IA. Chaque étape indique **quoi faire** puis **quoi dire** (1 ou 2 phrases simples).
